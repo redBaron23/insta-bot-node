@@ -18,6 +18,7 @@ const BROWSER = 'chromium';
 
 async function start(USERNAME,PASSWORD){
 	let response = {};
+	const bounces = 1000;
 	const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
 	let page = await browser.newPage();
 	await page.goto('https://www.instagram.com');
@@ -25,7 +26,7 @@ async function start(USERNAME,PASSWORD){
 	//Login insta
 	await logIn(page,USERNAME,PASSWORD)
 	let ACCOUNTS = ["justinbieber","cristiano","arianagrande","therock"]
-	await bounceAccounts(page,ACCOUNTS,100)
+	await bounceAccounts(page,ACCOUNTS,bounces)
       
 }
 
