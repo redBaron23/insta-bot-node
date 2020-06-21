@@ -7,7 +7,7 @@ const appDir = path.dirname(require.main.filename);
 const helper = require(appDir+'/api/helper')
 
 
-const HEADLESS = false;
+const HEADLESS = true;
 
 const BROWSER = 'chromium-browser';
 

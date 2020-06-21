@@ -1,0 +1,15 @@
+[Unit]
+Description= Insta Bot 
+After=network.target
+
+[Service]
+ExecStart=/home/pi/projects/insta-bot-node/insta-bot.sh
+ExecStop=killall insta-bot
+WorkingDirectory=/home/pi/projects/insta-bot-node
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
