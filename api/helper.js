@@ -15,5 +15,16 @@ async function sleep(time) {
   await delay(time);
 }
 
+async function checkMemory(){
+  const used = process.memoryUsage();
+
+  console.log('------Memory----')
+  for (let key in used) {
+    console.log(`${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+  }
+  console.log('----')
+}
+
+exports.checkMemory = checkMemory
 exports.sleep = sleep
 exports.getRandom = getRandom

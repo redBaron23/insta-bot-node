@@ -64,21 +64,25 @@ async function bounceAccounts(page,ACCOUNTS,bounces){
   const MAX_TIME = 6000;	//10min
   let timeBounce = 0;
   let timeBetween = 0;
+  let used = 0;
 
   for (i = 0; i < bounces; i++) {
     console.log('Bounce number: '+i) 
     //Follow all accounts
+    helper.checkMemory();
     await followAccounts(page,ACCOUNTS);
     
     timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Time remaining between follow/unfollow' +' '+timeBetween/1000)
+    helper.checkMemory()
     await helper.sleep(timeBetween);
-
+    
     //Unfollow all accounts
     await unfollowAccounts(page,ACCOUNTS);
 
     timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Time remaining for the next bounce: '+' '+ timeBounce/1000)
+    helper.checkMemory()
     await helper.sleep(timeBounce)
 
 
