@@ -16,8 +16,8 @@ const HEADLESS = false;
 
 const BROWSER = 'chromium';
 
-
-
+const ACCOUNTS_FAMOUS = ["mileycyrus","jlo","kendalljenner","neymarjr","beyonce","kimkardashian","kyliejenner","natgeo","leomessi","justinbieber","cristiano","arianagrande","therock"]
+	
 
 
 
@@ -28,7 +28,7 @@ async function start(USERNAME,PASSWORD){
 
 	//let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
   	let response = {};
-	const bounces = 1000;
+	const bounces = 1;
 	const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
 	let page = await browser.newPage();
 	await page.goto('https://www.instagram.com');
@@ -38,12 +38,14 @@ async function start(USERNAME,PASSWORD){
 	
 	//Get cookies
 	const cookies = await getCookies(page,USERNAME);
-
-
-
-	let ACCOUNTS = ["mileycyrus","jlo","kendalljenner","neymarjr","beyonce","kimkardashian","kyliejenner","natgeo","leomessi","justinbieber","cristiano","arianagrande","therock"]
-	//await bounceAccounts(page,ACCOUNTS,bounces)
-        	console.log(cookies)	
+	//accountHelper.getGarcas(USERNAME,COOKIES,WHITELIST)
+	browser.close();	
+	//Open account
+	let account = new accountHelper.Account(USERNAME,cookies);
+	await account.init()
+	
+	
+	await bounceAccounts(account,bounces)
 }
 
 async function getCookies(page,USERNAME){
@@ -87,7 +89,7 @@ async function logIn(page,USERNAME,PASSWORD){
 }
 
 
-async function bounceAccounts(page,ACCOUNTS,bounces){
+async function bounceAccounts(account,bounces){
 
   const MIN_TIME = 1200;	//2min
   const MAX_TIME = 6000;	//10min
@@ -98,20 +100,17 @@ async function bounceAccounts(page,ACCOUNTS,bounces){
   for (i = 0; i < bounces; i++) {
     console.log('Bounce number: '+i) 
     //Follow all accounts
-    await helper.checkMemory();
-    await followAccounts(page,ACCOUNTS);
+    await followAccounts(account);
     
     timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Time remaining between follow/unfollow' +' '+timeBetween/1000)
-    await helper.checkMemory()
     await helper.sleep(timeBetween);
     
     //Unfollow all accounts
-    await unfollowAccounts(page,ACCOUNTS);
+    await unfollowAccounts(account);
 
     timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Time remaining for the next bounce: '+' '+ timeBounce/1000)
-    await helper.checkMemory()
     await helper.sleep(timeBounce)
 
 
@@ -119,18 +118,18 @@ async function bounceAccounts(page,ACCOUNTS,bounces){
 }
 
 
-async function unfollowAccounts(page,ACCOUNTS){
+async function unfollowAccounts(account){
   
   const MIN_TIME = 2000;
   const MAX_TIME = 100000
   let timeout = 0;
   let i = 1
-  
-  console.log('Unfollowing: '+ ACCOUNTS.length)
-  for (let account of ACCOUNTS){
-    console.log(account + ' ' + i +'/'+ ACCOUNTS.length)
+  console.log(ACCOUNTS_FAMOUS); 
+  console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
+  for (let userName of ACCOUNTS){
+    console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
-    await unfollow(page,account)
+    await account.unfollow(userName)
     
     //timeout
     timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
@@ -139,18 +138,18 @@ async function unfollowAccounts(page,ACCOUNTS){
     i++
   }
 }
-async function followAccounts(page,ACCOUNTS){
+async function followAccounts(account){
   
   const MIN_TIME = 2000;
   const MAX_TIME = 100000
   
   let timeout = 0;
   let i = 1
-  console.log('Following: '+ ACCOUNTS.length)
-   for (let account of ACCOUNTS){
-    console.log(account + ' ' + i +'/'+ ACCOUNTS.length)
+  console.log('Following: '+ ACCOUNTS_FAMOUS.length)
+   for (let userName of ACCOUNTS_FAMOUS){
+    console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
-    await follow(page,account)
+    await account.follow(userName)
     
     //timeout
     timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
