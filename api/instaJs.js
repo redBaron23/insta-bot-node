@@ -12,9 +12,9 @@ const PATO_GARCAS_URI = appDir+'/api/data/pato.toledo-garcas.json'
 
 const accountHelper = require(appDir+'/api/accountHelper')
 
-const HEADLESS = false;
+const HEADLESS = true;
 
-const BROWSER = 'chromium';
+const BROWSER = 'chromium-browser';
 
 const ACCOUNTS_FAMOUS = ["mileycyrus","jlo","kendalljenner","neymarjr","beyonce","kimkardashian","kyliejenner","natgeo","leomessi","justinbieber","cristiano","arianagrande","therock"]
 	
