@@ -35,7 +35,7 @@ async function start(USERNAME,PASSWORD){
 	
 	//Login insta
 	await logIn(page,USERNAME,PASSWORD)
-	let ACCOUNTS = ["justinbieber","cristiano","arianagrande","therock"]
+	let ACCOUNTS = ["mileycyrus","jlo","kendalljenner","neymarjr","beyonce","kimkardashian","kyliejenner","natgeo","leomessi","justinbieber","cristiano","arianagrande","therock"]
 	await bounceAccounts(page,ACCOUNTS,bounces)
         
 }
