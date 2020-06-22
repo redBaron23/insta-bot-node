@@ -160,6 +160,9 @@ async function followAccounts(account){
    }
 }
 
+// DEPRECATED
+//
+/*
 async function follow(page,USERNAME){
   
   const FOLLOW_BTN = '#react-root > section > main > div > header > section > div.nZSzR > div.Igw0E.IwRSH.eGOV_._4EzTm > span > span.vBF20._1OSdk > button'
@@ -200,7 +203,6 @@ async function unfollow(page,USERNAME){
 
 
 }
-
 async function getFollowing(page,USERNAME){
   
   const ELEMENTS = 'body > div.RnEpo.Yx5HN > div > div > div.isgrP > ul > div'
@@ -231,6 +233,7 @@ async function getFollowing(page,USERNAME){
 
 }
 
+*/
 
 async function goToProfile(page,USERNAME){
   
@@ -260,34 +263,5 @@ async function goToProfile(page,USERNAME){
 
 
 
-
-
-
-
-///Funcs
-//
-async function autoScroll(page){
-    await page.evaluate(async () => {
-        await new Promise((resolve, reject) => {
-            var totalHeight = 0;
-            var distance = 100;
-            var timer = setInterval(() => {
-                var scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-
-                if(totalHeight >= scrollHeight){
-                    clearInterval(timer);
-                    resolve();
-                }
-            }, 100);
-        });
-    });
-}
-
-
-
-
-///
 
 exports.start = start;
