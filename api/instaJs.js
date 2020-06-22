@@ -12,9 +12,9 @@ const PATO_GARCAS_URI = appDir+'/api/data/pato.toledo-garcas.json'
 
 const accountHelper = require(appDir+'/api/accountHelper')
 
-const HEADLESS = true;
+const HEADLESS = false;
 
-const BROWSER = 'chromium-browser';
+const BROWSER = 'chromium';
 
 
 
@@ -35,10 +35,26 @@ async function start(USERNAME,PASSWORD){
 	
 	//Login insta
 	await logIn(page,USERNAME,PASSWORD)
+	
+	//Get cookies
+	const cookies = await getCookies(page,USERNAME);
 	let ACCOUNTS = ["justinbieber","cristiano","arianagrande","therock"]
-	await bounceAccounts(page,ACCOUNTS,bounces)
-        
+	//await bounceAccounts(page,ACCOUNTS,bounces)
+	console.log(cookies)	
 }
+
+async function getCookies(page,USERNAME){
+  const usefulCookies = [
+    "sessionid",
+    "csrftoken",
+    "shbid"
+  ]
+  await goToProfile(page,USERNAME)
+  const browserCookies = await page.cookies();
+  const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
+  return cookies
+}
+
 
 async function logIn(page,USERNAME,PASSWORD){
    
