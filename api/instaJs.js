@@ -14,7 +14,7 @@ const accountHelper = require(appDir+'/api/accountHelper')
 
 const HEADLESS = true;
 
-const BROWSER = 'chromium-browser';
+const BROWSER = 'chromium';
 
 const ACCOUNTS_FAMOUS = ["mileycyrus","jlo","kendalljenner","neymarjr","beyonce","kimkardashian","kyliejenner","natgeo","leomessi","justinbieber","cristiano","arianagrande","therock"]
 	
