@@ -6,10 +6,11 @@ const appDir = path.dirname(require.main.filename);
 
 const helper = require(appDir+'/api/helper')
 
+const accountHelper = require(appDir+'/api/accountHelper')
 
-const HEADLESS = true;
+const HEADLESS = false;
 
-const BROWSER = 'chromium-browser';
+const BROWSER = 'chromium';
 
 
 
