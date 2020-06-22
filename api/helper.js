@@ -16,13 +16,20 @@ async function sleep(time) {
 }
 
 async function checkMemory(){
-  const used = process.memoryUsage();
+let _maxMemoryConsumption = 0;
+let _dtOfMaxMemoryConsumption;
 
-  console.log('------Memory----')
-  for (let key in used) {
-    console.log(`${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+process.nextTick(() => {
+  let memUsage = process.memoryUsage();
+  if (memUsage.rss > _maxMemoryConsumption) {
+    _maxMemoryConsumption = memUsage.rss;
+    _dtOfMaxMemoryConsumption = new Date();
   }
-  console.log('----')
+});
+
+process.on('exit', () => {
+  console.log(`Max memory consumption: ${_maxMemoryConsumption/1024/1024} at ${_dtOfMaxMemoryConsumption}`);
+});
 }
 
 exports.checkMemory = checkMemory

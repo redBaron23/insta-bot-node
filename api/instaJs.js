@@ -1,16 +1,20 @@
 const puppeteer = require('puppeteer');
 const axios = require('axios');
 const path = require('path')
+const fs = require('fs');
+
 
 const appDir = path.dirname(require.main.filename);
 
 const helper = require(appDir+'/api/helper')
 
+const PATO_GARCAS_URI = appDir+'/api/data/pato.toledo-garcas.json'
+
 const accountHelper = require(appDir+'/api/accountHelper')
 
-const HEADLESS = false;
+const HEADLESS = true;
 
-const BROWSER = 'chromium';
+const BROWSER = 'chromium-browser';
 
 
 
@@ -18,7 +22,12 @@ const BROWSER = 'chromium';
 
 
 async function start(USERNAME,PASSWORD){
-	let response = {};
+  
+  const rawdata = fs.readFileSync(PATO_GARCAS_URI);
+  const patoWhitelist = JSON.parse(rawdata);
+
+	//let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
+  	let response = {};
 	const bounces = 1000;
 	const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
 	let page = await browser.newPage();
@@ -28,7 +37,7 @@ async function start(USERNAME,PASSWORD){
 	await logIn(page,USERNAME,PASSWORD)
 	let ACCOUNTS = ["justinbieber","cristiano","arianagrande","therock"]
 	await bounceAccounts(page,ACCOUNTS,bounces)
-      
+        
 }
 
 async function logIn(page,USERNAME,PASSWORD){
@@ -70,12 +79,12 @@ async function bounceAccounts(page,ACCOUNTS,bounces){
   for (i = 0; i < bounces; i++) {
     console.log('Bounce number: '+i) 
     //Follow all accounts
-    helper.checkMemory();
+    await helper.checkMemory();
     await followAccounts(page,ACCOUNTS);
     
     timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Time remaining between follow/unfollow' +' '+timeBetween/1000)
-    helper.checkMemory()
+    await helper.checkMemory()
     await helper.sleep(timeBetween);
     
     //Unfollow all accounts
@@ -83,7 +92,7 @@ async function bounceAccounts(page,ACCOUNTS,bounces){
 
     timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Time remaining for the next bounce: '+' '+ timeBounce/1000)
-    helper.checkMemory()
+    await helper.checkMemory()
     await helper.sleep(timeBounce)
 
 

@@ -104,14 +104,17 @@ async function getData(URL,HEADERS){
   }
 }
 
-async function getGarcas(USERNAME){
+async function getGarcas(USERNAME,WHITELIST){
   //A garca is who you follow but it didn't follow you back
   
 
   const {followers, following} = await getAccountData(USERNAME)
+  
+  //No include following in followers
   const users = following.filter( i => !followers.includes(i));
-
-  return users
+ 
+  const garcas = (WHITELIST)? users.filter( i => !WHITELIST.includes(i)) : users
+  return garcas
 
 
 }
@@ -161,7 +164,6 @@ async function getAccountData(USERNAME){
     following
   }
 }
-
 
 exports.getAccountData = getAccountData
 exports.getMutuals = getMutuals
