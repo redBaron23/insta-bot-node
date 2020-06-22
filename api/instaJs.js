@@ -38,9 +38,12 @@ async function start(USERNAME,PASSWORD){
 	
 	//Get cookies
 	const cookies = await getCookies(page,USERNAME);
-	let ACCOUNTS = ["justinbieber","cristiano","arianagrande","therock"]
+
+
+
+	let ACCOUNTS = ["mileycyrus","jlo","kendalljenner","neymarjr","beyonce","kimkardashian","kyliejenner","natgeo","leomessi","justinbieber","cristiano","arianagrande","therock"]
 	//await bounceAccounts(page,ACCOUNTS,bounces)
-	console.log(cookies)	
+        	console.log(cookies)	
 }
 
 async function getCookies(page,USERNAME){
