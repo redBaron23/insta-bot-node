@@ -16,9 +16,8 @@ const HEADLESS = true;
 
 const BROWSER = 'chromium-browser';
 
-const ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kyliejenner","selenagomez","kimkardashian","leomessi","beyonce","neymarjr","justinbieber","natgeo","taylorswift","kendalljenner","jlo","nickiminaj","nike","khloekardashian","mileycyrus","katyperry","kourtneykardash","kevinhart4real","theellenshow","realmadrid","fcbarcelona","ddlovato","badgalriri","zendaya","victoriassecret","iamcardib","champagnepapi","shakira","chrisbrownofficial","kingjames","vindiesel","billieeilish","virat.kohli","davidbeckham","championsleague","nasa","justintimberlake","emmawatson","shawnmendes","gigihadid","priyankachopra","9gag","ronaldinho","maluma","camilacabello","deepikapadukone","nba","aliaabhatt","shraddhakapoor","Anita","marvel","dualipa","snoopdogg","robertdowneyjr","willsmith","Jamesrodriguez10","marcelotwelve","hudabeauty","caradelevingne","leonardodicaprio","nikefootball","garethbale11","zlatanibrahimovic","chrishemsworth","narendramodi","zacefron","ladygaga","jacquelinef143","raffinagita1717","whinderssonnunes","5.min.crafts","tatawerneck","paulpogba","jbalvin","ayutingting92","lelepons","k.mbappe","akshaykumar","gucci","Juventus","chanelofficial","daddyyankee","michelleobama","zara","gal_gadot","nehakakkar","natgeotravel","sergioramos","vanessahudgens","mosalah","katrinakaif","paulodybala","premierleague","louisvuitton","anushkasharma","luissuarez9"] 
+const ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kyliejenner","selenagomez","kimkardashian","leomessi","beyonce","neymarjr","justinbieber","natgeo","taylorswift","kendalljenner","jlo","nickiminaj","nike","khloekardashian","mileycyrus","katyperry","kourtneykardash","kevinhart4real","theellenshow","realmadrid","fcbarcelona","ddlovato","badgalriri","zendaya","victoriassecret","iamcardib","champagnepapi","shakira","chrisbrownofficial","kingjames","vindiesel","billieeilish","virat.kohli","davidbeckham","championsleague","nasa","justintimberlake","emmawatson","shawnmendes","gigihadid","priyankachopra","9gag","ronaldinho","maluma","camilacabello","nba","aliaabhatt","shraddhakapoor","Anita","marvel","dualipa","snoopdogg","robertdowneyjr","willsmith","Jamesrodriguez10","marcelotwelve","hudabeauty","caradelevingne","leonardodicaprio","nikefootball","garethbale11","zlatanibrahimovic","chrishemsworth","narendramodi","zacefron","ladygaga","jacquelinef143","raffinagita1717","whinderssonnunes","5.min.crafts","tatawerneck","paulpogba","jbalvin","ayutingting92","lelepons","k.mbappe","akshaykumar","gucci","Juventus","chanelofficial","daddyyankee","michelleobama","zara","gal_gadot","nehakakkar","natgeotravel","sergioramos","vanessahudgens","mosalah","katrinakaif","paulodybala","premierleague","louisvuitton","anushkasharma","luissuarez9"] 
 	
-
 
 
 async function start(USERNAME,PASSWORD){
@@ -28,7 +27,7 @@ async function start(USERNAME,PASSWORD){
 
 	//let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
   	let response = {};
-	const bounces = 1;
+	const bounces = 10000;
 	const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
 	let page = await browser.newPage();
 	await page.goto('https://www.instagram.com');
@@ -91,8 +90,8 @@ async function logIn(page,USERNAME,PASSWORD){
 
 async function bounceAccounts(account,bounces){
 
-  const MIN_TIME = 1200;	//2min
-  const MAX_TIME = 6000;	//10min
+  const MIN_TIME = 120;	//2min
+  const MAX_TIME = 600;	//10min
   let timeBounce = 0;
   let timeBetween = 0;
   let used = 0;
@@ -120,8 +119,8 @@ async function bounceAccounts(account,bounces){
 
 async function unfollowAccounts(account){
   
-  const MIN_TIME = 2000;
-  const MAX_TIME = 100000
+  const MIN_TIME = 200;
+  const MAX_TIME = 10000
   let timeout = 0;
   let i = 1
   console.log(ACCOUNTS_FAMOUS); 
@@ -145,8 +144,12 @@ async function followAccounts(account){
   
   let timeout = 0;
   let i = 1
+	console.log(ACCOUNTS_FAMOUS)
   console.log('Following: '+ ACCOUNTS_FAMOUS.length)
    for (let userName of ACCOUNTS_FAMOUS){
+	   if(!userName){
+	   	console.log('Vacio en la posicion'+i)
+	   }
     console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
     await account.follow(userName)
