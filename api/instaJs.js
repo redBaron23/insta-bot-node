@@ -14,21 +14,21 @@ const accountHelper = require(appDir+'/api/accountHelper')
 
 const HEADLESS = true;
 
-const BROWSER = 'chromium-browser';
+const BROWSER = 'chromium';
 
 const ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kyliejenner","selenagomez","kimkardashian","leomessi","beyonce","neymarjr","justinbieber","natgeo","taylorswift","kendalljenner","jlo","nickiminaj","nike","khloekardashian","mileycyrus","katyperry","kourtneykardash","kevinhart4real","theellenshow","realmadrid","fcbarcelona","ddlovato","badgalriri","zendaya","victoriassecret","iamcardib","champagnepapi","shakira","chrisbrownofficial","kingjames","vindiesel","billieeilish","virat.kohli","davidbeckham","championsleague","nasa","justintimberlake","emmawatson","shawnmendes","gigihadid","priyankachopra","9gag","ronaldinho","maluma","camilacabello","deepikapadukone","nba","aliaabhatt","shraddhakapoor","Anita","marvel","dualipa","snoopdogg","robertdowneyjr","willsmith","Jamesrodriguez10","marcelotwelve","hudabeauty","caradelevingne","leonardodicaprio","nikefootball","garethbale11","zlatanibrahimovic","chrishemsworth","narendramodi","zacefron","ladygaga","jacquelinef143","raffinagita1717","whinderssonnunes","5.min.crafts","tatawerneck","paulpogba","jbalvin","ayutingting92","lelepons","k.mbappe","akshaykumar","gucci","Juventus","chanelofficial","daddyyankee","michelleobama","zara","gal_gadot","nehakakkar","natgeotravel","sergioramos","vanessahudgens","mosalah","katrinakaif","paulodybala","premierleague","louisvuitton","anushkasharma","luissuarez9"] 
 	
 
 
 
-async function start(USERNAME,PASSWORD){
+async function farmFamous(USERNAME,PASSWORD){
   
   const rawdata = fs.readFileSync(PATO_GARCAS_URI);
   const patoWhitelist = JSON.parse(rawdata);
 
 	//let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
   	let response = {};
-	const bounces = 1;
+	const bounces = 1000;
 	const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
 	let page = await browser.newPage();
 	await page.goto('https://www.instagram.com');
@@ -44,9 +44,19 @@ async function start(USERNAME,PASSWORD){
 	let account = new accountHelper.Account(USERNAME,cookies);
 	await account.init()
 	
-	
-	await bounceAccounts(account,bounces)
+	//FamousFarm
+	let _status
+	try{
+	  bounceAccounts(account,bounces)
+	  _status = 'Farm famous started'
+	}
+	catch(e){
+	  _status = 'Farm famous could not start propertly'
+	}
+  return _status
 }
+
+
 
 async function getCookies(page,USERNAME){
   const usefulCookies = [
@@ -57,6 +67,12 @@ async function getCookies(page,USERNAME){
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
   const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
+  if (cookies.length == 3){
+    console.log('Session created')
+  }
+  else{
+    console.log('ERROR AT LOGIN')
+  }
   return cookies
 }
 
@@ -124,7 +140,6 @@ async function unfollowAccounts(account){
   const MAX_TIME = 100000
   let timeout = 0;
   let i = 1
-  console.log(ACCOUNTS_FAMOUS); 
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
   for (let userName of ACCOUNTS){
     console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
@@ -140,23 +155,28 @@ async function unfollowAccounts(account){
 }
 async function followAccounts(account){
   
-  const MIN_TIME = 2000;
-  const MAX_TIME = 100000
+  const MIN_TIME = 20000;
+  const MAX_TIME = 100000;
   
   let timeout = 0;
   let i = 1
   console.log('Following: '+ ACCOUNTS_FAMOUS.length)
    for (let userName of ACCOUNTS_FAMOUS){
     console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
-    
-    await account.follow(userName)
-    
+    try{ 
+      await account.follow(userName)
+    }
+    catch(e){
+      console.log('Account not followed')
+    }
+    finally{
     //timeout
-    timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log("Waiting for: "+ timeout/1000)
-    await helper.sleep(timeout);
+      timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
+      console.log("Waiting for: "+ timeout/1000)
+      await helper.sleep(timeout);
     
-    i++
+      i++
+    }
    }
 }
 
@@ -264,4 +284,5 @@ async function goToProfile(page,USERNAME){
 
 
 
-exports.start = start;
+exports.farmFamous = farmFamous;
+//exports.start = start;

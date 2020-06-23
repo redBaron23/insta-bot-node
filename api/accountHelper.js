@@ -7,14 +7,15 @@ const querystring = require('querystring');
 
 const axios = require('axios')
 
+const default_quantity = 1000
+
 class Account {
   constructor(userName,cookies) {
     this._userName = userName;
 
     this._csrftoken = cookies.find(i => i.name == 'csrftoken')
     this._shbid = cookies.find(i => i.name == 'shbid')
-    this._sessionid = cookies.find(i => i.name == 'sessionid')
-    
+    this._sessionid = cookies.find(i => i.name == 'sessionid')    
 
 
 
@@ -22,10 +23,22 @@ class Account {
   
   async init(){
     this._userId = await this.getUserId(this._userName)
+    this._countFollowing = await this.countFollowing()
+    this._countFollowers = await this.countFollowers()
   }
 
+  async update(){
 
+  this._totalFollowing = await this.countFollowing()
+  this._totalFollowers = await this.countFollowers()
+ }
 
+  get totalFollowing(){
+  return this._totalFollowing
+  }
+  get totalFollowers(){
+    return this._totalFollowers
+  }
   get csrftoken() {
     return this._csrftoken;
   }  get shbid() {
@@ -77,7 +90,7 @@ async unfollow(userName){
   }
 }
 
-async  getUsers(QUERY_HASH){
+async  getUsers(QUERY_HASH,quantity){
    
   let nextCursor = ''  
   let users = []
@@ -86,7 +99,7 @@ async  getUsers(QUERY_HASH){
   let isNextPage = true
 
   const isFollower = (QUERY_HASH ==  'c76146de99bb02f6415203be841dd25a')? true : false //true = follower
-  while(isNextPage){
+  while(isNextPage && users.length <= quantity){
     
 
 
@@ -104,17 +117,19 @@ async  getUsers(QUERY_HASH){
     nextCursor = response.nextCursor 
     isNextPage = (nextCursor) ? true : false
   }
-    return users
+    return users.slice(0,quantity)
 }
 
-async getFollowing(){
+async getFollowing(i){
+  const quantity = (i)? i : default_quantity
   const QUERY_HASH = 'd04b0a864b4b54837c0d870b0e77e076'; //Following
-  return await this.getUsers(QUERY_HASH)
+  return await this.getUsers(QUERY_HASH,quantity)
 }
 
-async getFollowers(){
+async getFollowers(i){
+  const quantity = (i)? i : default_quantity
   const QUERY_HASH = 'c76146de99bb02f6415203be841dd25a'; //Followers
-  return await this.getUsers(QUERY_HASH)
+  return await this.getUsers(QUERY_HASH,quantity)
  }
 
 
@@ -210,7 +225,7 @@ async getGarcas(WHITELIST){
   //A garca is who you follow but it didn't follow you back
   
 
-  const {followers, following} = await this.getAccountData(this._userName)
+  const {followers, following} = await this.getAccountData()
   
   //No include following in followers
   const users = following.filter( i => !followers.includes(i));
@@ -225,7 +240,7 @@ async getFans(){
   //A garca is who you follow but it didn't follow you back
   
 
-  const {followers, following} = await this.getAccountData(this._userName)
+  const {followers, following} = await this.getAccountData()
 
   const users = followers.filter( i => !following.includes(i));
 
@@ -237,7 +252,7 @@ async getFans(){
 
 async getMutuals(){
 
-  const {followers, following} = await this.getAccountData(this._userName)
+  const {followers, following} = await this.getAccountData()
 
   const users = followers.filter( i => following.includes(i));
   
@@ -245,20 +260,41 @@ async getMutuals(){
 
 
 }
-
-async getUserId(userName){
+async countFollowing(){
   
-  const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
+  const URL = 'https://www.instagram.com/'+this._userName+'/?__a=1'
 
   const response = await this.getData(URL);
-  return response.data.graphql.user.id
+  return response.data.graphql.user.edge_follow.count
 }
 
 
+async countFollowers(){
+  
+  const URL = 'https://www.instagram.com/'+this._userName+'/?__a=1'
+
+  const response = await this.getData(URL);
+  return response.data.graphql.user.edge_followed_by.count
+}
+
+
+async getUserId(userName){
+  if(userName){ 
+    const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
+
+    const response = await this.getData(URL);
+    return response.data.graphql.user.id
+
+  }
+  else{
+    console.log('No username detected')
+  }
+}
+
 async getAccountData(){
   
-  const followers = await this.getFollowers(this._userId);
-  const following = await this.getFollowing(this._userId);
+  const followers = await this.getFollowers();
+  const following = await this.getFollowing();
   
   return {
     followers,
