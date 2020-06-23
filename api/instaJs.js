@@ -107,8 +107,8 @@ async function logIn(page,USERNAME,PASSWORD){
 
 async function bounceAccounts(account,bounces){
 
-  const MIN_TIME = 120;	//2min
-  const MAX_TIME = 600;	//10min
+  const MIN_TIME = 300000;//5min
+  const MAX_TIME = 1200000;//20min
   let timeBounce = 0;
   let timeBetween = 0;
   let used = 0;
@@ -136,27 +136,34 @@ async function bounceAccounts(account,bounces){
 
 async function unfollowAccounts(account){
   
-  const MIN_TIME = 200;
-  const MAX_TIME = 10000
+  const MIN_TIME = 300000; //5min
+  const MAX_TIME = 600000;//10min
   let timeout = 0;
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
   for (let userName of ACCOUNTS){
     console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
-    await account.unfollow(userName)
-    
+    try{ 
+      await account.unfollow(userName)
+    }
+    catch(e){
+      console.log('Account not followed')
+    }
+    finally{
     //timeout
-    timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log("Waiting for: "+timeout/1000)
-    await helper.sleep(timeout);
-    i++
+      timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
+      console.log("Waiting for: "+ timeout/1000)
+      await helper.sleep(timeout);
+    
+      i++
+    }
   }
 }
 async function followAccounts(account){
   
-  const MIN_TIME = 20000;
-  const MAX_TIME = 100000;
+  const MIN_TIME = 300000;
+  const MAX_TIME = 600000;
   
   let timeout = 0;
   let i = 1
