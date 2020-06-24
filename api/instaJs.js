@@ -31,27 +31,31 @@ async function farmFamous(USERNAME,PASSWORD){
 	const bounces = 10000;
 	const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
 	let page = await browser.newPage();
+          await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
+
+
 	await page.goto('https://www.instagram.com');
 	
 	//Login insta
 	await logIn(page,USERNAME,PASSWORD)
-	
+		
+	  let _status
+	try{
 	//Get cookies
-	const cookies = await getCookies(page,USERNAME);
-	//accountHelper.getGarcas(USERNAME,COOKIES,WHITELIST)
-	browser.close();	
+	 const cookies = await getCookies(page,USERNAME);
+  	//accountHelper.getGarcas(USERNAME,COOKIES,WHITELIST)
+	  browser.close();	
 	//Open account
-	let account = new accountHelper.Account(USERNAME,cookies);
-	await account.init()
+	  let account = new accountHelper.Account(USERNAME,cookies);
+	  await account.init()
 	
 	//FamousFarm
-	let _status
-	try{
 	  bounceAccounts(account,bounces)
 	  _status = 'Farm famous started'
 	}
 	catch(e){
-	  _status = 'Farm famous could not start propertly'
+	  console.log(e)
+	  _statuis = 'Hubo un error'
 	}
   return _status
 }
@@ -71,7 +75,7 @@ async function getCookies(page,USERNAME){
     console.log('Session created')
   }
   else{
-    console.log('ERROR AT LOGIN')
+    throw('ERROR AT LOGIN')
   }
   return cookies
 }
@@ -167,7 +171,6 @@ async function followAccounts(account){
   
   let timeout = 0;
   let i = 1
-	console.log(ACCOUNTS_FAMOUS)
   console.log('Following: '+ ACCOUNTS_FAMOUS.length)
    for (let userName of ACCOUNTS_FAMOUS){
 	   if(!userName){
