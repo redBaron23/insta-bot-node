@@ -171,6 +171,7 @@ async postData(URL){
       'X-IG-App-ID': '936619743392459',
       'X-IG-WWW-Claim': 'hmac.AR219pFWs-qIxhqhubZT5W5dTLRV0tSHDzJDtK0-cg2BwLdF',
       'X-Requested-With': 'XMLHttpRequest',
+      'X-Instagram-AJAX': 'nosirve',
       'Connection': 'close',
       'Referer': 'https://www.instagram.com/pato.toledo/followers/?hl=es-la',
       'Host': 'www.instagram.com'
