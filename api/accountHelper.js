@@ -66,7 +66,6 @@ async follow(userName){
   
   const URL = 'https://www.instagram.com/web/friendships/'+userId+'/follow/';
 
-console.log(userId + ' Username : '+ userName)
   const res = await this.postData(URL)
   if (res.status == '200'){
     return true

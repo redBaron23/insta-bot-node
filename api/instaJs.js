@@ -123,14 +123,14 @@ async function bounceAccounts(account,bounces){
     await followAccounts(account);
     
     timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log('Time remaining between follow/unfollow' +' '+timeBetween/1000)
+    console.log('Minutes remaining between follow/unfollow' +' '+timeBetween/(1000/60))
     await helper.sleep(timeBetween);
     
     //Unfollow all accounts
     await unfollowAccounts(account);
 
     timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log('Time remaining for the next bounce: '+' '+ timeBounce/1000)
+    console.log('Minutes remaining for the next bounce: '+' '+ timeBounce/(1000/60))
     await helper.sleep(timeBounce)
 
 
@@ -145,8 +145,8 @@ async function unfollowAccounts(account){
   let timeout = 0;
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
-  for (let userName of ACCOUNTS){
-    console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
+  for (let userName of ACCOUNTS_FAMOUS){
+    console.log('Unfollowing: '+userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
     try{ 
       await account.unfollow(userName)
@@ -157,7 +157,7 @@ async function unfollowAccounts(account){
     finally{
     //timeout
       timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-      console.log("Waiting for: "+ timeout/1000)
+      console.log("Waiting min: "+ timeout/(1000*60))
       await helper.sleep(timeout);
     
       i++
@@ -176,7 +176,7 @@ async function followAccounts(account){
 	   if(!userName){
 	   	console.log('Vacio en la posicion'+i)
 	   }
-    console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
+    console.log('Following: '+userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     try{ 
       await account.follow(userName)
     }
@@ -186,7 +186,7 @@ async function followAccounts(account){
     finally{
     //timeout
       timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-      console.log("Waiting for: "+ timeout/1000)
+      console.log("Waiting min "+ timeout/(1000*60))
       await helper.sleep(timeout);
     
       i++
