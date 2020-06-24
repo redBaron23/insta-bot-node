@@ -167,7 +167,6 @@ async function followAccounts(account){
   
   let timeout = 0;
   let i = 1
-	console.log(ACCOUNTS_FAMOUS)
   console.log('Following: '+ ACCOUNTS_FAMOUS.length)
    for (let userName of ACCOUNTS_FAMOUS){
 	   if(!userName){
