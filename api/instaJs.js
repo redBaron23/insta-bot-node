@@ -145,7 +145,7 @@ async function unfollowAccounts(account){
   let timeout = 0;
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
-  for (let userName of ACCOUNTS){
+  for (let userName of ACCOUNTS_FAMOUS){
     console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
     try{ 
