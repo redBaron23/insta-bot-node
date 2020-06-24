@@ -14,7 +14,7 @@ const accountHelper = require(appDir+'/api/accountHelper')
 
 const HEADLESS = true;
 
-const BROWSER = 'chromium';
+const BROWSER = 'chromium-browser';
 
 const ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kyliejenner","selenagomez","kimkardashian","leomessi","beyonce","neymarjr","justinbieber","natgeo","taylorswift","kendalljenner","jlo","nickiminaj","nike","khloekardashian","mileycyrus","katyperry","kourtneykardash","kevinhart4real","theellenshow","realmadrid","fcbarcelona","ddlovato","badgalriri","zendaya","victoriassecret","iamcardib","champagnepapi","shakira","chrisbrownofficial","kingjames","vindiesel","billieeilish","virat.kohli","davidbeckham","championsleague","nasa","justintimberlake","emmawatson","shawnmendes","gigihadid","priyankachopra","9gag","ronaldinho","maluma","camilacabello","nba","aliaabhatt","shraddhakapoor","Anita","marvel","dualipa","snoopdogg","robertdowneyjr","willsmith","Jamesrodriguez10","marcelotwelve","hudabeauty","caradelevingne","leonardodicaprio","nikefootball","garethbale11","zlatanibrahimovic","chrishemsworth","narendramodi","zacefron","ladygaga","jacquelinef143","raffinagita1717","whinderssonnunes","5.min.crafts","tatawerneck","paulpogba","jbalvin","ayutingting92","lelepons","k.mbappe","akshaykumar","gucci","Juventus","chanelofficial","daddyyankee","michelleobama","zara","gal_gadot","nehakakkar","natgeotravel","sergioramos","vanessahudgens","mosalah","katrinakaif","paulodybala","premierleague","louisvuitton","anushkasharma","luissuarez9"] 
 	
@@ -123,14 +123,14 @@ async function bounceAccounts(account,bounces){
     await followAccounts(account);
     
     timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log('Time remaining between follow/unfollow' +' '+timeBetween/1000)
+    console.log('Minutes remaining between follow/unfollow' +' '+timeBetween/(1000/60))
     await helper.sleep(timeBetween);
     
     //Unfollow all accounts
     await unfollowAccounts(account);
 
     timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log('Time remaining for the next bounce: '+' '+ timeBounce/1000)
+    console.log('Minutes remaining for the next bounce: '+' '+ timeBounce/(1000/60))
     await helper.sleep(timeBounce)
 
 
@@ -146,7 +146,7 @@ async function unfollowAccounts(account){
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
   for (let userName of ACCOUNTS_FAMOUS){
-    console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
+    console.log('Unfollowing: '+userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     
     try{ 
       await account.unfollow(userName)
@@ -157,7 +157,7 @@ async function unfollowAccounts(account){
     finally{
     //timeout
       timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-      console.log("Waiting for: "+ timeout/1000)
+      console.log("Waiting min: "+ timeout/(1000*60))
       await helper.sleep(timeout);
     
       i++
@@ -176,7 +176,7 @@ async function followAccounts(account){
 	   if(!userName){
 	   	console.log('Vacio en la posicion'+i)
 	   }
-    console.log(userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
+    console.log('Following: '+userName + ' ' + i +'/'+ ACCOUNTS_FAMOUS.length)
     try{ 
       await account.follow(userName)
     }
@@ -186,7 +186,7 @@ async function followAccounts(account){
     finally{
     //timeout
       timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-      console.log("Waiting for: "+ timeout/1000)
+      console.log("Waiting min "+ timeout/(1000*60))
       await helper.sleep(timeout);
     
       i++
