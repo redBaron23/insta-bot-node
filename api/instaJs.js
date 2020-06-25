@@ -119,16 +119,16 @@ async function bounceAccounts(account,bounces){
 
   for (i = 0; i < bounces; i++) {
     console.log('Bounce number: '+i) 
-    //Follow all accounts
-    await followAccounts(account);
-    
+   
+    //Unfollow all accounts
+    await unfollowAccounts(account);
+ 
     timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Minutes remaining between follow/unfollow' +' '+timeBetween/(1000/60))
     await helper.sleep(timeBetween);
-    
-    //Unfollow all accounts
-    await unfollowAccounts(account);
-
+ 
+ //Follow all accounts
+    await followAccounts(account);
     timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
     console.log('Minutes remaining for the next bounce: '+' '+ timeBounce/(1000/60))
     await helper.sleep(timeBounce)
