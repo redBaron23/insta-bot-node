@@ -2,29 +2,126 @@
 //send cookies as param
 //send tokens
 //
+const puppeteer = require('puppeteer');
+const HEADLESS = true;
+
+const BROWSER = 'chromium';
+
+
 
 const querystring = require('querystring');
 
 const axios = require('axios')
 
-const default_quantity = 1000
+
+const default_quantity = 1000 //Followers/Unfollowers per account
+
+
+
+
+
+async function goToProfile(page,USERNAME){
+  
+  const SEARCH_INPUT = '#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.LWmhU._0aCwM > input';
+
+  const USER_ELEM = '#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.LWmhU._0aCwM > div:nth-child(4) > div.drKGC > div > a'
+  //const PROFILE_BTN = '#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.ctQZg > div > div:nth-child(5) > a'
+
+  try{
+    
+    await page.waitForSelector(SEARCH_INPUT,{timeout: 5000})
+    await page.focus(SEARCH_INPUT);
+    await page.keyboard.type(USERNAME,{delay:50})
+    await page.waitFor(2000);
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Enter')
+ 
+    console.log('In profile: '+ USERNAME)
+  }
+  catch(e){
+    console.log('Could not get to main profile')
+  }
+
+}
+async function getCookies(page,USERNAME){
+  const usefulCookies = [
+    "sessionid",
+    "csrftoken",
+    "shbid"
+  ]
+  await goToProfile(page,USERNAME)
+  const browserCookies = await page.cookies();
+  const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
+  if (cookies.length == 3){
+    console.log('Session created')
+  }
+  else{
+    throw('ERROR AT GRABBING COOKIES')
+  }
+  return cookies
+}
+
+
+async function logIn(USERNAME,PASSWORD){
+  const browser = await puppeteer.launch({executablePath: BROWSER,headless: HEADLESS});
+  let page = await browser.newPage();
+  await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
+
+  await page.goto('https://www.instagram.com');
+  
+  const USER_INPUT = '#react-root > section > main > article > div.rgFsT > div:nth-child(1) > div > form > div:nth-child(2) > div > label > input';
+
+  const PASS_INPUT = '#react-root > section > main > article > div.rgFsT > div:nth-child(1) > div > form > div:nth-child(3) > div > label > input';
+
+  const LOGIN_BTN = '#react-root > section > main > article > div.rgFsT > div:nth-child(1) > div > form > div:nth-child(4) > button > div';
+
+
+
+  await page.waitForSelector(USER_INPUT,{timeout: 5000})
+  await page.focus(USER_INPUT);
+  await page.keyboard.type(USERNAME,{delay:50})
+
+  await page.focus(PASS_INPUT);
+  await page.keyboard.type(PASSWORD,{delay:50})
+  try{
+    const btn = await page.waitForSelector(LOGIN_BTN, {timeout: 5000})
+    await btn.evaluate( btn => btn.click())
+    console.log('Logged Successful()')
+    const res = await getCookies(page,USERNAME);
+    return res
+  }
+  catch(e){
+    console.log(e);
+    return false
+  }
+
+}
 
 class Account {
-  constructor(userName,cookies) {
+  constructor(userName,passWord) {
     this._userName = userName;
-
-    this._csrftoken = cookies.find(i => i.name == 'csrftoken')
-    this._shbid = cookies.find(i => i.name == 'shbid')
-    this._sessionid = cookies.find(i => i.name == 'sessionid')    
-
+    this._passWord = passWord;
 
 
   }
   
   async init(){
-    this._userId = await this.getUserId(this._userName)
-    this._countFollowing = await this.countFollowing()
-    this._countFollowers = await this.countFollowers()
+    const cookies = await logIn(this._userName,this._passWord)
+
+
+    if ( cookies ) {
+      this._csrftoken = cookies.find(i => i.name == 'csrftoken')
+      this._shbid = cookies.find(i => i.name == 'shbid')
+      this._sessionid = cookies.find(i => i.name == 'sessionid')    
+
+      this._userId = await this.getUserId(this._userName)
+      this._totalFollowing = await this.countFollowing()
+      this._totalFollowers = await this.countFollowers()
+      return true
+    }
+    else{
+      return false
+    }
   }
 
   async update(){
@@ -57,6 +154,8 @@ class Account {
     console.log(this._shbid)
     console.log(this._userName)
     console.log(this._csrftoken)
+    console.log('Followers: '+this._totalFollowers)
+    console.log('Following: '+this._totalFollowing)
   }
 
 
@@ -90,11 +189,11 @@ async unfollow(userName){
   }
 }
 
-async  getUsers(QUERY_HASH,quantity){
+async  getUsers(QUERY_HASH,userName,quantity){
    
   let nextCursor = ''  
   let users = []
-  
+  const userId = (userName) ? await this.getUserId(userName) : this._userId
 
   let isNextPage = true
 
@@ -103,7 +202,7 @@ async  getUsers(QUERY_HASH,quantity){
     
 
 
-    let query_variables = '{"id": '+this._userId+',"include_reel":true,"fetch_mutual":false,"first":50,"after":"'+nextCursor+'"}'
+    let query_variables = '{"id": '+userId+',"include_reel":true,"fetch_mutual":false,"first":50,"after":"'+nextCursor+'"}'
     let variables = encodeURIComponent(query_variables);
     let URL = 'https://www.instagram.com/graphql/query/?query_hash='+QUERY_HASH+'&variables='+variables;
 
@@ -120,18 +219,26 @@ async  getUsers(QUERY_HASH,quantity){
     return users.slice(0,quantity)
 }
 
-async getFollowing(i){
+async getUserFollowing(userName,i){
   const quantity = (i)? i : default_quantity
   const QUERY_HASH = 'd04b0a864b4b54837c0d870b0e77e076'; //Following
-  return await this.getUsers(QUERY_HASH,quantity)
+  return await this.getUsers(QUERY_HASH,userName,quantity)
 }
 
-async getFollowers(i){
+async getUserFollowers(userName,i){
   const quantity = (i)? i : default_quantity
   const QUERY_HASH = 'c76146de99bb02f6415203be841dd25a'; //Followers
-  return await this.getUsers(QUERY_HASH,quantity)
+  return await this.getUsers(QUERY_HASH,userName,quantity)
  }
 
+  async getFollowing(i){
+    return await this.getUserFollowing(this._userName,i)
+  }
+
+
+  async getFollowers(i){
+    return await this.getUserFollowers(this._userName,i)
+  }
 
 async parseData(URL,isFollower){
   let nextCursor = false;
