@@ -1,3 +1,6 @@
+//TODO
+//
+//unfollowGarcas
 const puppeteer = require('puppeteer');
 const axios = require('axios');
 const path = require('path')
@@ -16,7 +19,7 @@ const HEADLESS = true;
 
 const BROWSER = 'chromium';
 
-const ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kyliejenner","selenagomez","kimkardashian","leomessi","beyonce","neymarjr","justinbieber","natgeo","taylorswift","kendalljenner","jlo","nickiminaj","nike","khloekardashian","mileycyrus","katyperry","kourtneykardash","kevinhart4real","theellenshow","realmadrid","fcbarcelona","ddlovato","badgalriri","zendaya","victoriassecret","iamcardib","champagnepapi","shakira","chrisbrownofficial","kingjames","vindiesel","billieeilish","virat.kohli","davidbeckham","championsleague","nasa","justintimberlake","emmawatson","shawnmendes","gigihadid","priyankachopra","9gag","ronaldinho","maluma","camilacabello","nba","aliaabhatt","shraddhakapoor","Anita","marvel","dualipa","snoopdogg","robertdowneyjr","willsmith","Jamesrodriguez10","marcelotwelve","hudabeauty","caradelevingne","leonardodicaprio","nikefootball","garethbale11","zlatanibrahimovic","chrishemsworth","narendramodi","zacefron","ladygaga","jacquelinef143","raffinagita1717","whinderssonnunes","5.min.crafts","tatawerneck","paulpogba","jbalvin","ayutingting92","lelepons","k.mbappe","akshaykumar","gucci","Juventus","chanelofficial","daddyyankee","michelleobama","zara","gal_gadot","nehakakkar","natgeotravel","sergioramos","vanessahudgens","mosalah","katrinakaif","paulodybala","premierleague","louisvuitton","anushkasharma","luissuarez9"] 
+let ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kyliejenner","selenagomez","kimkardashian","leomessi","beyonce","neymarjr","justinbieber","natgeo","taylorswift","kendalljenner","jlo","nickiminaj","nike","khloekardashian","mileycyrus","katyperry","kourtneykardash","kevinhart4real","theellenshow","realmadrid","fcbarcelona","ddlovato","badgalriri","zendaya","victoriassecret","iamcardib","champagnepapi","shakira","chrisbrownofficial","kingjames","vindiesel","billieeilish","virat.kohli","davidbeckham","championsleague","nasa","justintimberlake","emmawatson","shawnmendes","gigihadid","priyankachopra","9gag","ronaldinho","maluma","camilacabello","nba","aliaabhatt","shraddhakapoor","Anita","marvel","dualipa","snoopdogg","robertdowneyjr","willsmith","Jamesrodriguez10","marcelotwelve","hudabeauty","caradelevingne","leonardodicaprio","nikefootball","garethbale11","zlatanibrahimovic","chrishemsworth","narendramodi","zacefron","ladygaga","jacquelinef143","raffinagita1717","whinderssonnunes","5.min.crafts","tatawerneck","paulpogba","jbalvin","ayutingting92","lelepons","k.mbappe","akshaykumar","gucci","Juventus","chanelofficial","daddyyankee","michelleobama","zara","gal_gadot","nehakakkar","natgeotravel","sergioramos","vanessahudgens","mosalah","katrinakaif","paulodybala","premierleague","louisvuitton","anushkasharma","luissuarez9"] 
 	
 
 
@@ -24,8 +27,7 @@ const ACCOUNTS_FAMOUS = ["instagram","cristiano","arianagrande","therock","kylie
 async function farmFamous(USERNAME,PASSWORD){
   
   const rawdata = fs.readFileSync(PATO_GARCAS_URI);
-  const patoWhitelist = JSON.parse(rawdata);
-
+  const patoWhiteList = JSON.parse(rawdata);
 	//let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
   	let response = {};
 	const bounces = 10000;
@@ -50,6 +52,7 @@ async function farmFamous(USERNAME,PASSWORD){
 	  await account.init()
 	
 	//FamousFarm
+	ACCOUNTS_FAMOUS = await account.getGarcas(patoWhiteList);
 	  bounceAccounts(account,bounces)
 	  _status = 'Farm famous started'
 	}
@@ -60,7 +63,9 @@ async function farmFamous(USERNAME,PASSWORD){
   return _status
 }
 
-
+async function unfollowGarcas(account){
+  
+}
 
 async function getCookies(page,USERNAME){
   const usefulCookies = [
@@ -123,15 +128,11 @@ async function bounceAccounts(account,bounces){
     //Unfollow all accounts
     await unfollowAccounts(account);
  
-    timeBetween = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log('Minutes remaining between follow/unfollow' +' '+timeBetween/(1000/60))
-    await helper.sleep(timeBetween);
- 
+    //await helper.sleepRandom(MIN_TIME,MAX_TIME)
+    console.log('Termine_______') 
  //Follow all accounts
-    await followAccounts(account);
-    timeBounce = await helper.getRandom(MIN_TIME,MAX_TIME)
-    console.log('Minutes remaining for the next bounce: '+' '+ timeBounce/(1000/60))
-    await helper.sleep(timeBounce)
+    //await followAccounts(account);
+    await helper.sleepRandom(MIN_TIME,MAX_TIME)
 
 
   }
@@ -140,8 +141,8 @@ async function bounceAccounts(account,bounces){
 
 async function unfollowAccounts(account){
   
-  const MIN_TIME = 300000; //5min
-  const MAX_TIME = 600000;//10min
+  const MIN_TIME = 30000; //5min
+  const MAX_TIME = 60000;//10min
   let timeout = 0;
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
@@ -156,10 +157,7 @@ async function unfollowAccounts(account){
     }
     finally{
     //timeout
-      timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-      console.log("Waiting min: "+ timeout/(1000*60))
-      await helper.sleep(timeout);
-    
+      await helper.sleepRandom(MIN_TIME,MAX_TIME)
       i++
     }
   }
@@ -185,10 +183,8 @@ async function followAccounts(account){
     }
     finally{
     //timeout
-      timeout = await helper.getRandom(MIN_TIME,MAX_TIME)
-      console.log("Waiting min "+ timeout/(1000*60))
-      await helper.sleep(timeout);
     
+      await helper.sleepRandom(MIN_TIME,MAX_TIME)
       i++
     }
    }

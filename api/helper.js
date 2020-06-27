@@ -4,6 +4,12 @@ const getRandom = async (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+async function sleepRandom(MIN_TIME,MAX_TIME){
+    let time = await getRandom(MIN_TIME,MAX_TIME)
+    console.log('Sleeping :'+time/(1000/60)+' minutes')
+    await sleep(time);
+  
+}
 
 function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
@@ -35,3 +41,4 @@ process.on('exit', () => {
 exports.checkMemory = checkMemory
 exports.sleep = sleep
 exports.getRandom = getRandom
+exports.sleepRandom = sleepRandom
