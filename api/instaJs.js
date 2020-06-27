@@ -30,11 +30,7 @@ async function farmFamous(USERNAME,PASSWORD){
 	const bounces = 10000;
 	let account = new accountHelper.Account(USERNAME,PASSWORD);
 	await account.init()
-	const patoF = await account.getUserFollowing('pato.toledo')
-	const patoFo = await account.getUserFollowers('pato.toledo')
-
-	console.log(patoFo.length)
-	console.log(patoF.length)
+	account.follow('pato.toledo')
 }
 async function bounceAccounts(account,bounces){
 
@@ -45,7 +41,7 @@ async function bounceAccounts(account,bounces){
   let used = 0;
 
   for (i = 0; i < bounces; i++) {
-    console.log('Bounce number: '+i) 
+    console.log('Bounce number: '+i+' at time: '+ await helper.dateTime()) 
    
     //Unfollow all accounts
     await unfollowAccounts(account);

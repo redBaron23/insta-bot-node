@@ -3,6 +3,17 @@
 //send tokens
 //
 const puppeteer = require('puppeteer');
+const path = require('path')
+
+const fs = require('fs')
+
+const appDir = path.dirname(require.main.filename);
+
+const helper = require(appDir+'/api/helper')
+
+
+
+
 const HEADLESS = true;
 
 const BROWSER = 'chromium';
@@ -13,8 +24,8 @@ const querystring = require('querystring');
 
 const axios = require('axios')
 
-
-const default_quantity = 1000 //Followers/Unfollowers per account
+//Followers/Unfollowers per account
+const default_quantity = 10000 
 
 
 
@@ -117,13 +128,37 @@ class Account {
       this._userId = await this.getUserId(this._userName)
       this._totalFollowing = await this.countFollowing()
       this._totalFollowers = await this.countFollowers()
+
+
+      this._uri = appDir+'/api/data/users/'+this._userName
+      helper.createDirectory(this._uri)
+      //Saving cookies (no reason why)
+      helper.writeJson(cookies,this._uri+'/cookies.json')
+     
+
+
+
+
+      //Session data
+      let data = {};
+      const data_uri = this._uri+'/data.json'
+      if (!fs.existsSync(data_uri)){
+	data.userName = this._userName
+	data.firstFollowers = this._totalFollowers
+	data.dateStarted = await helper.dateTime()
+      }
+      else{
+	data = await helper.readJson(data_uri)
+	data.currentFollowers = this._totalFollowers;
+      }
+      helper.writeJson(data,data_uri)
       return true
     }
     else{
       return false
     }
+  
   }
-
   async update(){
 
   this._totalFollowing = await this.countFollowing()
@@ -132,6 +167,9 @@ class Account {
 
   get totalFollowing(){
   return this._totalFollowing
+  }
+  get sessionFollowed(){
+    return helper.readJson(this._uri+'/sessionFollowed.json')
   }
   get totalFollowers(){
     return this._totalFollowers
@@ -149,7 +187,6 @@ class Account {
     return this._userId
   }
   dump() {
-    console.log('Dumping')
     console.log(this._sessionid)
     console.log(this._shbid)
     console.log(this._userName)
@@ -167,6 +204,18 @@ async follow(userName){
 
   const res = await this.postData(URL)
   if (res.status == '200'){
+    //Seguidos en esta sesion
+    let oldFollowing = []
+    const sessionUri = this._uri+'/sessionFollowed.json'
+
+    if (fs.existsSync(sessionUri)){
+      oldFollowing = await helper.readJson(this._uri+'/sessionFollowed.json')
+    }
+    oldFollowing.push(userName);
+    
+    //remove duplicates
+    let newFollowing = oldFollowing.filter((value, index, self) => self.indexOf(value) === index)
+    helper.writeJson(newFollowing,this._uri+'/sessionFollowed.json')
     return true
   }
   else{
@@ -232,12 +281,16 @@ async getUserFollowers(userName,i){
  }
 
   async getFollowing(i){
-    return await this.getUserFollowing(this._userName,i)
+    const following = await this.getUserFollowing(this._userName,i)
+    helper.writeJson(following,this._uri+'/following.json')
+    return following
   }
 
 
   async getFollowers(i){
-    return await this.getUserFollowers(this._userName,i)
+    followers = await this.getUserFollowers(this._userName,i)
+    helper.writeJson(followers,this._uri+'/followers.json')
+    return followers
   }
 
 async parseData(URL,isFollower){
@@ -403,7 +456,7 @@ async getAccountData(){
   
   const followers = await this.getFollowers();
   const following = await this.getFollowing();
-  
+ 
   return {
     followers,
     following
