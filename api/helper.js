@@ -66,7 +66,7 @@ async function writeJson(jsonData,uri){
 async function sleepRandom(MIN_TIME,MAX_TIME){
     let sleepTime = await getRandom(MIN_TIME,MAX_TIME)
     time = parseInt(sleepTime);
-    time = time/(1000*600)
+    time = time/(1000*60)
     console.log('Sleeping :'+time+' minutes')
     await sleep(sleepTime);
   
