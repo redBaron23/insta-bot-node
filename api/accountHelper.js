@@ -150,6 +150,7 @@ class Account {
       else{
 	data = await helper.readJson(data_uri)
 	data.currentFollowers = this._totalFollowers;
+	data.profitFollowers = this._totalFollowers - data.firstFollowers
       }
       helper.writeJson(data,data_uri)
       return true
@@ -231,7 +232,17 @@ async unfollow(userName){
 
   const res = await this.postData(URL)
   if (res.status == '200'){
-    return true
+    let oldFollowing = []
+    const sessionUri = this._uri+'/sessionFollowed.json'
+
+    if (fs.existsSync(sessionUri)){
+      oldFollowing = await helper.readJson(this._uri+'/sessionFollowed.json')
+    }
+    
+    //remove unfollowed
+    let newFollowing = oldFollowing.filter( i => i !== userName) 
+    helper.writeJson(newFollowing,this._uri+'/sessionFollowed.json')
+ return true
   }
   else{
     return false
