@@ -30,7 +30,7 @@ async function timeHour(){
 
 async function timeDay(){
   const date = new Date();
-  const day = date.getDate()+'/'+date.getMonth()+'/'+date.getFullYear();
+  const day = date.getDate()+'/'+(date.getMonth()+1)+'/'+date.getFullYear();
   return day
 }
 

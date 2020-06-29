@@ -45,8 +45,6 @@ async function farmFamous(USERNAME,PASSWORD){
 
 
 async function followUserFollowers(USERNAME,PASSWORD){
-  //TODO
-  //Resolve the loop
    let _status;
   try{
     let rawdata = fs.readFileSync(PATO_GARCAS_URI);

@@ -17,7 +17,7 @@ const helper = require(appDir+'/api/helper')
 
 
 
-const HEADLESS = false;
+const HEADLESS = true;
 
 const BROWSER = 'chromium';
 
@@ -386,13 +386,19 @@ async postData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
-      console.log('Error 429, waiting 2 hours to try it again on postData()'.red)
-      await helper.sleep(7200000)
+      console.log(('Error 429, TOO MANY REQUEST, waiting '+errTime[429]+' and try it again').red)
+      await helper.sleep(errTime[429])
       await this.init()
-      console.log('Retrying')
-      let res = await this.postData(URL)
+      let res = await this.getData(URL)
       return res
     }
+    else if (e.response.status == 400){
+      console.log(('Error 400, BAD REQUEST, waiting '+errTime[400]+' and try it again').red)
+      await helper.sleep(errTime[400])
+      await this.init()
+      let res = await this.getData(URL)
+      return res
+     }
     else{
       throw(e)
     }
@@ -435,7 +441,7 @@ async getData(URL){
       let res = await this.getData(URL)
       return res
     }
-    else if (e.response.status == 400{
+    else if (e.response.status == 400){
       console.log(('Error 400, BAD REQUEST, waiting '+errTime[400]+' and try it again').red)
       await helper.sleep(errTime[400])
       await this.init()
