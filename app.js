@@ -16,6 +16,23 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 // parse application/json
 app.use(bodyParser.json())
+app.route('/followUserFollowers')
+  .get(async function(req, res) {
+    res.send("No paper");
+  })
+  .post(async function(req, res) {
+    
+    let result; 
+    const username = req.body.username
+    const password = req.body.password
+    result = (username &&  password) ? (await instaJs.followUserFollowers(username,password)) : "No username or password provided"
+    console.log(result)
+    res.send(result);
+  })
+
+
+
+
 
 app.route('/farmFamous')
   .get(async function(req, res) {
