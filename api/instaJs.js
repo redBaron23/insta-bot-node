@@ -14,16 +14,17 @@ const FAMOUS_URI = appDir+'/api/data/accountFamous.json'
 
 const accountHelper = require(appDir+'/api/accountHelper')
 
-let rawdata = fs.readFileSync(FAMOUS_URI);
-const ACCOUNTS_FAMOUS = JSON.parse(rawdata)
- 
+
+
 	
 const bounces = 10000;
 
 
 
 async function farmFamous(USERNAME,PASSWORD){
-  let _status
+  let rawdata = fs.readFileSync(FAMOUS_URI);
+  const ACCOUNTS_FAMOUS = JSON.parse(rawdata)
+   let _status
   try{
     let rawdata = fs.readFileSync(PATO_GARCAS_URI);
     const patoWhiteList = JSON.parse(rawdata);
@@ -32,7 +33,7 @@ async function farmFamous(USERNAME,PASSWORD){
     let account = new accountHelper.Account(USERNAME,PASSWORD);
     await account.init()
     //FamousFarm
-    bounceAccounts(account,bounces)
+    bounceAccounts(account,bounces,ACCOUNTS_FAMOUS)
     _status = 'Farm famous started'
   }
   catch(e){
@@ -42,29 +43,73 @@ async function farmFamous(USERNAME,PASSWORD){
   return _status
 }
 
-async function followUserFollows(account){
-  //TODO
-  //Resolve the loop
-  console.log('Empieza')
-  const userName = 'psicologia_memes'
-  try{
-  const followers = await account.getUserFollowers(userName)
-  console.log(followers)
- // for (i = 0; i < follwers.length; i++ {
-   // console.log(followers[i])
-  //}
-  for (let i of followers){
-    console.log(i)
-  }
 
+async function followUserFollowers(USERNAME,PASSWORD){
+   let _status;
+  try{
+    let rawdata = fs.readFileSync(PATO_GARCAS_URI);
+    const patoWhiteList = JSON.parse(rawdata);
+   //let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
+    let response = {};
+    let account = new accountHelper.Account(USERNAME,PASSWORD);
+    await account.init()  
+    const userName = 'psicologia_memes'
+    followAll(account,userName);
+    _status = 'Follow user Followers started'
   }
   catch(e){
+    _status = 'Hubo un error'
     console.log('Too many request')
   }
+  return _status
 
 }
 
-async function bounceAccounts(account,bounces){
+async function followAll(account,userName){
+
+    const MIN_TIME = 60000;
+    const MAX_TIME = 120000;
+  
+
+    //following/followers
+    const ratio = 0.2
+
+    const rSize = 500 //Number of users per request (lower better to don't get a ban)
+    const totalFollowers = await account.countFollowers(userName);
+    const times = Math.trunc(totalFollowers / rSize)+1
+    //const totalFollowing = await account.countFollowing(userName);
+    console.log('Going to follow ~'+String(totalFollowers).red+' from '+userName.green+' in '+String(times).blue+' times')
+    
+    for (i=0; i < times; i++){
+      
+      console.log(String(i+'/'+times).red)
+      console.log('At time: '+ await helper.dateTime())
+
+      let followers = await account.getUserFollowers(userName,rSize)
+    
+      
+      
+      //Just follow users
+      await followAccounts(account,followers,ratio);
+      
+      //timeout
+      await helper.sleepRandom(MIN_TIME,MAX_TIME)
+    } 
+}
+async function isViable(account,userName,ratio){
+  
+  const realRatio = (ratio) ? ratio : 0.23
+  const followers = await account.countFollowers(userName);
+  const following = await account.countFollowing(userName);
+  
+  const currentRatio = following/followers
+
+  const _status = (currentRatio >= realRatio)
+  
+  return _status
+
+}
+async function bounceAccounts(account,bounces,ACCOUNTS_FAMOUS){
 
   const MIN_TIME = 300000;//5min
   const MAX_TIME = 1200000;//20min
@@ -75,14 +120,14 @@ async function bounceAccounts(account,bounces){
   for (i = 0; i < bounces; i++) {
     console.log('Bounce number: '+colors.red(i) )
     //Follow all accounts
-    await followAccounts(account);
+    await followAccounts(account,ACCOUNTS_FAMOUS);
    
     console.log('At time: '+ await helper.dateTime())
     
     await helper.sleepRandom(MIN_TIME,MAX_TIME)
     console.log('Termine_______') 
     //Unfollow all accounts
-    await unfollowAccounts(account);
+    await unfollowAccounts(account,ACCOUNTS_FAMOUS);
     await helper.sleepRandom(MIN_TIME,MAX_TIME)
 
 
@@ -90,7 +135,7 @@ async function bounceAccounts(account,bounces){
 }
 
 
-async function unfollowAccounts(account){
+async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
   
   const MIN_TIME = 90000; //5min
   const MAX_TIME = 180000;//10min
@@ -114,10 +159,10 @@ async function unfollowAccounts(account){
     }
   }
 }
-async function followAccounts(account){
+async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
   
-  const MIN_TIME = 90000; //5min
-  const MAX_TIME = 180000;
+  const MIN_TIME = 300000; //5min
+  const MAX_TIME = 420005; //7min
   
   let timeout = 0;
   let i = 1
@@ -129,7 +174,12 @@ async function followAccounts(account){
     console.log('Following: ' + (i +'/'+ ACCOUNTS_FAMOUS.length).green)
     console.log('At time: '+ await helper.dateTime())
     try{ 
-      await account.follow(userName)
+
+      if ((!ratio) || (await isViable(account,userName,ratio))){
+	console.log(String('Going to follow '+userName).green)
+	await account.follow(userName)
+      }
+	
     }
     catch(e){
       console.log('Account not followed')
@@ -149,5 +199,8 @@ async function followAccounts(account){
 
 
 
+
+
 exports.farmFamous = farmFamous;
+exports.followUserFollowers = followUserFollowers
 //exports.start = start;

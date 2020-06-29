@@ -5,6 +5,9 @@
 const puppeteer = require('puppeteer');
 const path = require('path')
 
+
+const colors = require('colors')
+
 const fs = require('fs')
 
 const appDir = path.dirname(require.main.filename);
@@ -27,6 +30,7 @@ const axios = require('axios')
 //Followers/Unfollowers per account
 const default_quantity = 10000 
 
+const errTime = {"init":(1000*3600*2),400:(1000*3600*2),429:(1000*3600*12)}
 
 
 
@@ -58,12 +62,12 @@ async function getCookies(page,USERNAME){
   const usefulCookies = [
     "sessionid",
     "csrftoken",
-    "shbid"
   ]
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
+  console.log(browserCookies)
   const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
-  if (cookies.length == 3){
+  if (cookies.length == 2){
     console.log('Session created')
   }
   else{
@@ -97,13 +101,16 @@ async function logIn(USERNAME,PASSWORD){
   try{
     const btn = await page.waitForSelector(LOGIN_BTN, {timeout: 5000})
     await btn.evaluate( btn => btn.click())
-    console.log('Logged Successful()')
     const res = await getCookies(page,USERNAME);
+    console.log('Logged Successful()')
     return res
   }
   catch(e){
     console.log(e);
-    return false
+    throw('logIn failed')
+  }
+  finally{
+    browser.close()
   }
 
 }
@@ -117,46 +124,54 @@ class Account {
   }
   
   async init(){
-    const cookies = await logIn(this._userName,this._passWord)
+    try{
+      const cookies = await logIn(this._userName,this._passWord)
+
+      if ( cookies ) {
+	this._csrftoken = cookies.find(i => i.name == 'csrftoken')
+	this._shbid = '13095' //Never changes
+	this._sessionid = cookies.find(i => i.name == 'sessionid')    
+
+	this._userId = await this.getUserId(this._userName)
+	this._totalFollowing = await this.countFollowing(this.userName)
+	this._totalFollowers = await this.countFollowers(this._userName)
 
 
-    if ( cookies ) {
-      this._csrftoken = cookies.find(i => i.name == 'csrftoken')
-      this._shbid = cookies.find(i => i.name == 'shbid')
-      this._sessionid = cookies.find(i => i.name == 'sessionid')    
-
-      this._userId = await this.getUserId(this._userName)
-      this._totalFollowing = await this.countFollowing()
-      this._totalFollowers = await this.countFollowers()
-
-
-      this._uri = appDir+'/api/data/users/'+this._userName
-      helper.createDirectory(this._uri)
-      //Saving cookies (no reason why)
-      helper.writeJson(cookies,this._uri+'/cookies.json')
-     
+	this._uri = appDir+'/api/data/users/'+this._userName
+	helper.createDirectory(this._uri)
+	//Saving cookies (no reason why)
+	helper.writeJson(cookies,this._uri+'/cookies.json')
+       
 
 
 
 
-      //Session data
-      let data = {};
-      const data_uri = this._uri+'/data.json'
-      if (!fs.existsSync(data_uri)){
-	data.userName = this._userName
-	data.firstFollowers = this._totalFollowers
-	data.dateStarted = await helper.dateTime()
+	//Session data
+	let data = {};
+	const data_uri = this._uri+'/data.json'
+	if (!fs.existsSync(data_uri)){
+	  data.userName = this._userName
+	  data.firstFollowers = this._totalFollowers
+	  data.dateStarted = await helper.dateTime()
+	}
+	else{
+	  data = await helper.readJson(data_uri)
+	  data.currentFollowers = this._totalFollowers;
+	  data.profitFollowers = this._totalFollowers - data.firstFollowers
+	}
+	helper.writeJson(data,data_uri)
+	return true
       }
       else{
-	data = await helper.readJson(data_uri)
-	data.currentFollowers = this._totalFollowers;
-	data.profitFollowers = this._totalFollowers - data.firstFollowers
+	return false
       }
-      helper.writeJson(data,data_uri)
-      return true
     }
-    else{
-      return false
+    catch(e){
+      
+      console.log(('Could not init the account, retrying in '+(errTime.init)/(1000*3600) +' hours').red)
+      await helper.sleep(errTime.init)
+      let res = await this.init()
+      return res
     }
   
   }
@@ -250,17 +265,27 @@ async unfollow(userName){
 }
 
 async  getUsers(QUERY_HASH,userName,quantity){
-   
+  console.log(userName)
   let nextCursor = ''  
+  const uri_history = this._uri+'/usersHistory.json'
+  //Last time searched for that user
+  //If we are looking for ower users, it will not save the history
+  let userHistory = {}
+  try{
+    userHistory = await helper.readJson(uri_history);
+    nextCursor = userHistory[userName].nextCursor
+  }
+  catch(e){
+    await helper.writeJson(userHistory,uri_history)
+  }
   let users = []
+  
   const userId = (userName) ? await this.getUserId(userName) : this._userId
-
   let isNextPage = true
 
   const isFollower = (QUERY_HASH ==  'c76146de99bb02f6415203be841dd25a')? true : false //true = follower
   while(isNextPage && users.length <= quantity){
     
-
 
     let query_variables = '{"id": '+userId+',"include_reel":true,"fetch_mutual":false,"first":50,"after":"'+nextCursor+'"}'
     let variables = encodeURIComponent(query_variables);
@@ -276,7 +301,10 @@ async  getUsers(QUERY_HASH,userName,quantity){
     nextCursor = response.nextCursor 
     isNextPage = (nextCursor) ? true : false
   }
-    return users.slice(0,quantity)
+  const userType = (isFollower) ? 'followers' : 'following'
+  userHistory[userName] = {"nextCursor":nextCursor,userType:users}
+  helper.writeJson(userHistory,uri_history)
+  return users.slice(0,quantity)
 }
 
 async getUserFollowing(userName,i){
@@ -356,7 +384,23 @@ async postData(URL){
     return response
   }
   catch(e) {
-    console.log(e)
+    if(e.response.status == 429){
+      console.log(('Error 429, TOO MANY REQUEST, waiting '+(errTime[429]/(3600*1000))+' hours and try it again').red)
+      await helper.sleep(errTime[429])
+      await this.init()
+      let res = await this.getData(URL)
+      return res
+    }
+    else if (e.response.status == 400){
+      console.log(('Error 400, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
+      await helper.sleep(errTime[400])
+      await this.init()
+      let res = await this.getData(URL)
+      return res
+     }
+    else{
+      throw(e)
+    }
   }
 }
 
@@ -389,8 +433,24 @@ async getData(URL){
     return response
   }
   catch(e) {
-    console.log(e)
-  }
+    if(e.response.status == 429){
+      console.log(('Error 429, TOO MANY REQUEST, waiting '+errTime[429]+' and try it again').red)
+      await helper.sleep(errTime[429])
+      await this.init()
+      let res = await this.getData(URL)
+      return res
+    }
+    else if (e.response.status == 400){
+      console.log(('Error 400, BAD REQUEST, waiting '+errTime[400]+' and try it again').red)
+      await helper.sleep(errTime[400])
+      await this.init()
+      let res = await this.getData(URL)
+      return res
+     }
+    else{
+      throw(e)
+    }
+  } 
 }
 
 async getGarcas(WHITELIST){
@@ -432,19 +492,18 @@ async getMutuals(){
 
 
 }
-async countFollowing(){
+async countFollowing(userName){
   
-  const URL = 'https://www.instagram.com/'+this._userName+'/?__a=1'
+  const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
 
   const response = await this.getData(URL);
   return response.data.graphql.user.edge_follow.count
 }
 
 
-async countFollowers(){
+async countFollowers(userName){
   
-  const URL = 'https://www.instagram.com/'+this._userName+'/?__a=1'
-
+  const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
   const response = await this.getData(URL);
   return response.data.graphql.user.edge_followed_by.count
 }
@@ -453,7 +512,6 @@ async countFollowers(){
 async getUserId(userName){
   if(userName){ 
     const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
-
     const response = await this.getData(URL);
     return response.data.graphql.user.id
 
