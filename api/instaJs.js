@@ -161,8 +161,8 @@ async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
 }
 async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
   
-  const MIN_TIME = 90000; //5min
-  const MAX_TIME = 180000;
+  const MIN_TIME = 300000; //5min
+  const MAX_TIME = 420005; //7min
   
   let timeout = 0;
   let i = 1

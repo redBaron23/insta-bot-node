@@ -62,16 +62,15 @@ async function getCookies(page,USERNAME){
   const usefulCookies = [
     "sessionid",
     "csrftoken",
-    "shbid"
   ]
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
+  console.log(browserCookies)
   const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
-  if (cookies.length == 3){
+  if (cookies.length == 2){
     console.log('Session created')
   }
   else{
-    console.log(cookies)
     throw('ERROR AT GRABBING COOKIES')
   }
   return cookies
@@ -130,7 +129,7 @@ class Account {
 
       if ( cookies ) {
 	this._csrftoken = cookies.find(i => i.name == 'csrftoken')
-	this._shbid = cookies.find(i => i.name == 'shbid')
+	this._shbid = '13095' //Never changes
 	this._sessionid = cookies.find(i => i.name == 'sessionid')    
 
 	this._userId = await this.getUserId(this._userName)
@@ -169,7 +168,7 @@ class Account {
     }
     catch(e){
       
-      console.log(('Could not init the account, retrying in '+errTime.init).red)
+      console.log(('Could not init the account, retrying in '+(errTime.init)/(1000*3600) +' hours').red)
       await helper.sleep(errTime.init)
       let res = await this.init()
       return res
@@ -386,14 +385,14 @@ async postData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
-      console.log(('Error 429, TOO MANY REQUEST, waiting '+errTime[429]+' and try it again').red)
+      console.log(('Error 429, TOO MANY REQUEST, waiting '+(errTime[429]/(3600*1000))+' hours and try it again').red)
       await helper.sleep(errTime[429])
       await this.init()
       let res = await this.getData(URL)
       return res
     }
     else if (e.response.status == 400){
-      console.log(('Error 400, BAD REQUEST, waiting '+errTime[400]+' and try it again').red)
+      console.log(('Error 400, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
       await helper.sleep(errTime[400])
       await this.init()
       let res = await this.getData(URL)
