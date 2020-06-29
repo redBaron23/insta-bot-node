@@ -65,7 +65,6 @@ async function getCookies(page,USERNAME){
   ]
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
-  console.log(browserCookies)
   const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
   if (cookies.length == 2){
     console.log('Session created')
