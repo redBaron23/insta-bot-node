@@ -30,6 +30,7 @@ const axios = require('axios')
 //Followers/Unfollowers per account
 const default_quantity = 10000 
 
+const errTime = {"init":(1000*3600*2),400:(1000*3600*2),429:(1000*3600*12)}
 
 
 
@@ -127,49 +128,51 @@ class Account {
     try{
       const cookies = await logIn(this._userName,this._passWord)
 
+      if ( cookies ) {
+	this._csrftoken = cookies.find(i => i.name == 'csrftoken')
+	this._shbid = cookies.find(i => i.name == 'shbid')
+	this._sessionid = cookies.find(i => i.name == 'sessionid')    
 
-    if ( cookies ) {
-      this._csrftoken = cookies.find(i => i.name == 'csrftoken')
-      this._shbid = cookies.find(i => i.name == 'shbid')
-      this._sessionid = cookies.find(i => i.name == 'sessionid')    
-
-      this._userId = await this.getUserId(this._userName)
-      this._totalFollowing = await this.countFollowing(this.userName)
-      this._totalFollowers = await this.countFollowers(this._userName)
+	this._userId = await this.getUserId(this._userName)
+	this._totalFollowing = await this.countFollowing(this.userName)
+	this._totalFollowers = await this.countFollowers(this._userName)
 
 
-      this._uri = appDir+'/api/data/users/'+this._userName
-      helper.createDirectory(this._uri)
-      //Saving cookies (no reason why)
-      helper.writeJson(cookies,this._uri+'/cookies.json')
-     
-
+	this._uri = appDir+'/api/data/users/'+this._userName
+	helper.createDirectory(this._uri)
+	//Saving cookies (no reason why)
+	helper.writeJson(cookies,this._uri+'/cookies.json')
+       
 
 
 
-      //Session data
-      let data = {};
-      const data_uri = this._uri+'/data.json'
-      if (!fs.existsSync(data_uri)){
-	data.userName = this._userName
-	data.firstFollowers = this._totalFollowers
-	data.dateStarted = await helper.dateTime()
+
+	//Session data
+	let data = {};
+	const data_uri = this._uri+'/data.json'
+	if (!fs.existsSync(data_uri)){
+	  data.userName = this._userName
+	  data.firstFollowers = this._totalFollowers
+	  data.dateStarted = await helper.dateTime()
+	}
+	else{
+	  data = await helper.readJson(data_uri)
+	  data.currentFollowers = this._totalFollowers;
+	  data.profitFollowers = this._totalFollowers - data.firstFollowers
+	}
+	helper.writeJson(data,data_uri)
+	return true
       }
       else{
-	data = await helper.readJson(data_uri)
-	data.currentFollowers = this._totalFollowers;
-	data.profitFollowers = this._totalFollowers - data.firstFollowers
+	return false
       }
-      helper.writeJson(data,data_uri)
-      return true
-    }
-    else{
-      return false
-    }
     }
     catch(e){
       
-      throw('Could not init the account')
+      console.log(('Could not init the account, retrying in '+errTime.init).red)
+      await helper.sleep(errTime.init)
+      let res = await this.init()
+      return res
     }
   
   }
@@ -383,9 +386,10 @@ async postData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
-      console.log('Error 429, waiting 2 hours to try it again'.red)
+      console.log('Error 429, waiting 2 hours to try it again on postData()'.red)
       await helper.sleep(7200000)
       await this.init()
+      console.log('Retrying')
       let res = await this.postData(URL)
       return res
     }
@@ -425,12 +429,19 @@ async getData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
-      console.log('Error 429, waiting 2 hours to try it again'.red)
-      await helper.sleep(7200000)
+      console.log(('Error 429, TOO MANY REQUEST, waiting '+errTime[429]+' and try it again').red)
+      await helper.sleep(errTime[429])
       await this.init()
       let res = await this.getData(URL)
       return res
     }
+    else if (e.response.status == 400{
+      console.log(('Error 400, BAD REQUEST, waiting '+errTime[400]+' and try it again').red)
+      await helper.sleep(errTime[400])
+      await this.init()
+      let res = await this.getData(URL)
+      return res
+     }
     else{
       throw(e)
     }
