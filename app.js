@@ -30,6 +30,20 @@ app.route('/followUserFollowers')
     res.send(result);
   })
 
+app.route('/unfollowGarcas')
+  .get(async function(req, res) {
+    res.send("No paper");
+  })
+  .post(async function(req, res) {
+    
+    let result; 
+    const username = req.body.username
+    const password = req.body.password
+    result = (username &&  password) ? (await instaJs.unfollowGarcas(username,password)) : "No username or password provided"
+    console.log(result)
+    res.send(result);
+  })
+
 
 
 
