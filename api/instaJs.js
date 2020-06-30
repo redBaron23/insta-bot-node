@@ -65,6 +65,26 @@ async function followUserFollowers(USERNAME,PASSWORD){
 
 }
 
+async function unfollowGarcas(USERNAME,PASSWORD){
+  let _response;
+  try{
+    let account = new accountHelper.Account(USERNAME,PASSWORD)
+    await account.init()
+
+    const garcas = await account.getGarcas()
+
+    console.log(('Unfollowing: '+garcas.length+ 'garcas').green)
+    unfollowAccounts(account,garcas)
+
+    _response = 'Unfollow garcas started'
+  }
+  catch(e){
+    _response = 'Hubo un error'
+    console.log('Error at unfollow garcas')
+  }
+  return _response
+}
+
 async function followAll(account,userName){
 
     const MIN_TIME = 60000;

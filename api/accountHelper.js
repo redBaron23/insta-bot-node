@@ -455,13 +455,15 @@ async getData(URL){
 async getGarcas(WHITELIST){
   //A garca is who you follow but it didn't follow you back
   
+  const data_uri = this._uri+'/whiteList.json'
+  const whiteList = (fs.existsSync(data_uri) && !WHITELIST) ? await readJson(data_uri) : WHITELIST
 
   const {followers, following} = await this.getAccountData()
   
   //No include following in followers
   const users = following.filter( i => !followers.includes(i));
  
-  const garcas = (WHITELIST)? users.filter( i => !WHITELIST.includes(i)) : users
+  const garcas = (whiteList)? users.filter( i => !whiteList.includes(i)) : users
   return garcas
 
 

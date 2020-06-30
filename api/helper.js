@@ -58,8 +58,9 @@ async function writeJson(jsonData,uri){
 	console.log("An error occured while writing JSON Object to File.");
         return console.log(err);
       }
- 
-    console.log("JSON file has been saved. ");
+    let arrayStr = uri.split('/');
+    let fileName = arrayStr[arrayStr.length-1]
+    console.log(fileName+" has been saved. ");
   });
 }
 
