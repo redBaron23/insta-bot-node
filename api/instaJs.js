@@ -26,13 +26,12 @@ async function farmFamous(USERNAME,PASSWORD){
   const ACCOUNTS_FAMOUS = JSON.parse(rawdata)
    let _status
   try{
-    let rawdata = fs.readFileSync(PATO_GARCAS_URI);
-    const patoWhiteList = JSON.parse(rawdata);
    //let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
     let response = {};
     let account = new accountHelper.Account(USERNAME,PASSWORD);
     await account.init()
     //FamousFarm
+
     bounceAccounts(account,bounces,ACCOUNTS_FAMOUS)
     _status = 'Farm famous started'
   }
@@ -63,6 +62,47 @@ async function followUserFollowers(USERNAME,PASSWORD){
   }
   return _status
 
+}
+async function unfollowSession(USERNAME,PASSWORD){
+  let _response;
+  try{
+    let account = new accountHelper.Account(USERNAME,PASSWORD)
+    await account.init()
+
+
+    const sessioners = await account.sessionFollowed()
+    console.log(sessioners)
+    console.log(('Unfollowing: '+sessioners.length+ ' session followeds').green)
+    unfollowAccounts(account,sessioners)
+
+    _response = 'Unfollow session followed started'
+  }
+  catch(e){
+    _response = 'Hubo un error'
+    console.log('Error at unfollow session')
+  }
+  return _response
+}
+async function unfollowGarcas(USERNAME,PASSWORD){
+  let _response;
+  try{
+    let account = new accountHelper.Account(USERNAME,PASSWORD)
+    await account.init()
+
+    await account.follow('justinbieber')
+    await account.follow('leomessi')
+    const garcas = await account.getGarcas()
+    console.log(garcas)
+    console.log(('Unfollowing: '+garcas.length+ ' garcas').green)
+    unfollowAccounts(account,garcas)
+
+    _response = 'Unfollow garcas started'
+  }
+  catch(e){
+    _response = 'Hubo un error'
+    console.log('Error at unfollow garcas')
+  }
+  return _response
 }
 
 async function followAll(account,userName){
@@ -143,7 +183,7 @@ async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
   for (let userName of ACCOUNTS_FAMOUS){
-    console.log('Unfollowing: ' + (i +'/'+ ACCOUNTS_FAMOUS.length).green)
+    console.log('Unfollowing: ' + (i +'/'+ ACCOUNTS_FAMOUS.length +' '+userName).green)
     
     console.log('At time: '+ await helper.dateTime())
     try{ 
@@ -171,7 +211,7 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
 	   if(!userName){
 	   	console.log('Vacio en la posicion'+i)
 	   }
-    console.log('Following: ' + (i +'/'+ ACCOUNTS_FAMOUS.length).green)
+    console.log('Following: ' + (i +'/'+ ACCOUNTS_FAMOUS.length +' '+userName).green)
     console.log('At time: '+ await helper.dateTime())
     try{ 
 
@@ -200,7 +240,7 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
 
 
 
-
+exports.unfollowGarcas = unfollowGarcas;
 exports.farmFamous = farmFamous;
 exports.followUserFollowers = followUserFollowers
 //exports.start = start;

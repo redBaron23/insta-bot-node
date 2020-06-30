@@ -62,15 +62,19 @@ async function getCookies(page,USERNAME){
   const usefulCookies = [
     "sessionid",
     "csrftoken",
+    "shbid"
   ]
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
-  console.log(browserCookies)
   const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
-  if (cookies.length == 2){
+  if (!cookies.shbid){
+    cookies.shbid = {"name":"shbid","value":"13095","domain":".instagram.com","path":"/","expires":1593920567.071231,"size":10,"httpOnly":true,"secure":true,"session":false}
+  }
+  if (cookies.length == 3){
     console.log('Session created')
   }
   else{
+    console.log('Error')
     throw('ERROR AT GRABBING COOKIES')
   }
   return cookies
@@ -125,11 +129,13 @@ class Account {
   
   async init(){
     try{
+
+      console.log('Init account')
       const cookies = await logIn(this._userName,this._passWord)
 
       if ( cookies ) {
 	this._csrftoken = cookies.find(i => i.name == 'csrftoken')
-	this._shbid = '13095' //Never changes
+	this._shbid = cookies.find(i => i.name == 'shbid')
 	this._sessionid = cookies.find(i => i.name == 'sessionid')    
 
 	this._userId = await this.getUserId(this._userName)
@@ -265,7 +271,6 @@ async unfollow(userName){
 }
 
 async  getUsers(QUERY_HASH,userName,quantity){
-  console.log(userName)
   let nextCursor = ''  
   const uri_history = this._uri+'/usersHistory.json'
   //Last time searched for that user
@@ -285,12 +290,10 @@ async  getUsers(QUERY_HASH,userName,quantity){
 
   const isFollower = (QUERY_HASH ==  'c76146de99bb02f6415203be841dd25a')? true : false //true = follower
   while(isNextPage && users.length <= quantity){
-    
-
     let query_variables = '{"id": '+userId+',"include_reel":true,"fetch_mutual":false,"first":50,"after":"'+nextCursor+'"}'
     let variables = encodeURIComponent(query_variables);
     let URL = 'https://www.instagram.com/graphql/query/?query_hash='+QUERY_HASH+'&variables='+variables;
-
+    helper.sleep(1200)
     let response = await this.parseData(URL,isFollower);
   
     
@@ -301,6 +304,7 @@ async  getUsers(QUERY_HASH,userName,quantity){
     nextCursor = response.nextCursor 
     isNextPage = (nextCursor) ? true : false
   }
+  nextCursor = (nextCursor) ? nextCursor : ""
   const userType = (isFollower) ? 'followers' : 'following'
   userHistory[userName] = {"nextCursor":nextCursor,userType:users}
   helper.writeJson(userHistory,uri_history)
@@ -327,7 +331,7 @@ async getUserFollowers(userName,i){
 
 
   async getFollowers(i){
-    followers = await this.getUserFollowers(this._userName,i)
+    const followers = await this.getUserFollowers(this._userName,i)
     helper.writeJson(followers,this._uri+'/followers.json')
     return followers
   }
@@ -367,11 +371,11 @@ async postData(URL){
       'Accept-Encoding': 'gzip, deflate',
       'X-CSRFToken': this._csrftoken.value,
       'X-IG-App-ID': '936619743392459',
-      'X-IG-WWW-Claim': 'hmac.AR219pFWs-qIxhqhubZT5W5dTLRV0tSHDzJDtK0-cg2BwLdF',
+      'X-IG-WWW-Claim': 'hmac.AR1P_tpI9zVx0XXJmn4F6-m5s9I_Uo042hIDFnbA5jIHurbG',
       'X-Requested-With': 'XMLHttpRequest',
       'X-Instagram-AJAX': 'nosirve',
       'Connection': 'close',
-      'Referer': 'https://www.instagram.com/pato.toledo/followers/?hl=es-la',
+      'Referer': 'https://www.instagram.com/',
       'Host': 'www.instagram.com'
     }
   const options = {
@@ -434,14 +438,14 @@ async getData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
-      console.log(('Error 429, TOO MANY REQUEST, waiting '+errTime[429]+' and try it again').red)
+      console.log(('Error 429, TOO MANY REQUEST, waiting '+(errTime[429])/(3600*1000)+' hours and try it again').red)
       await helper.sleep(errTime[429])
       await this.init()
       let res = await this.getData(URL)
       return res
     }
     else if (e.response.status == 400){
-      console.log(('Error 400, BAD REQUEST, waiting '+errTime[400]+' and try it again').red)
+      console.log(('Error 400, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
       await helper.sleep(errTime[400])
       await this.init()
       let res = await this.getData(URL)
@@ -456,15 +460,19 @@ async getData(URL){
 async getGarcas(WHITELIST){
   //A garca is who you follow but it didn't follow you back
   
-
-  const {followers, following} = await this.getAccountData()
-  
-  //No include following in followers
-  const users = following.filter( i => !followers.includes(i));
- 
-  const garcas = (WHITELIST)? users.filter( i => !WHITELIST.includes(i)) : users
-  return garcas
-
+  try{
+    const data_uri = this._uri+'/whiteList.json'
+    const whiteList = (fs.existsSync(data_uri) && !WHITELIST) ? await helper.readJson(data_uri) : WHITELIST
+    const {followers, following} = await this.getAccountData()
+    //No include following in followers
+    const users = following.filter( i => !followers.includes(i));
+   
+    const garcas = (whiteList)? users.filter( i => !whiteList.includes(i)) : users
+    return garcas
+  }
+  catch(e){
+    console.log(e)
+  }
 
 }
 
