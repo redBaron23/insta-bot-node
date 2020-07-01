@@ -66,15 +66,16 @@ async function getCookies(page,USERNAME){
   ]
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
-  const cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
-  if (!cookies.shbid){
-    cookies.shbid = {"name":"shbid","value":"13095","domain":".instagram.com","path":"/","expires":1593920567.071231,"size":10,"httpOnly":true,"secure":true,"session":false}
+  let cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
+  
+  //not important cookie
+  if (cookies.shbid == undefined){
+    cookies.push({"name":"shbid","value":"13095","domain":".instagram.com","path":"/","expires":1593920567.071231,"size":10,"httpOnly":true,"secure":true,"session":false})
   }
   if (cookies.length == 3){
     console.log('Session created')
   }
   else{
-    console.log('Error')
     throw('ERROR AT GRABBING COOKIES')
   }
   return cookies
@@ -130,7 +131,7 @@ class Account {
   async init(){
     try{
 
-      console.log('Init account')
+      console.log('Starting account: '+this._userName)
       const cookies = await logIn(this._userName,this._passWord)
 
       if ( cookies ) {

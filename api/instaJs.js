@@ -46,14 +46,12 @@ async function farmFamous(USERNAME,PASSWORD){
 async function followUserFollowers(USERNAME,PASSWORD){
    let _status;
   try{
-    let rawdata = fs.readFileSync(PATO_GARCAS_URI);
-    const patoWhiteList = JSON.parse(rawdata);
    //let garcas = await accountHelper.getGarcas('pato.toledo',patoWhitelist)
     let response = {};
     let account = new accountHelper.Account(USERNAME,PASSWORD);
     await account.init()  
     const userName = 'psicologia_memes'
-    followAll(account,userName);
+    followAll(account,userName)
     _status = 'Follow user Followers started'
   }
   catch(e){
