@@ -67,9 +67,8 @@ async function getCookies(page,USERNAME){
   await goToProfile(page,USERNAME)
   const browserCookies = await page.cookies();
   let cookies = browserCookies.filter(i => usefulCookies.includes(i.name))
-  
   //not important cookie
-  if (cookies.shbid == undefined){
+  if (cookies[2] == undefined){
     cookies.push({"name":"shbid","value":"13095","domain":".instagram.com","path":"/","expires":1593920567.071231,"size":10,"httpOnly":true,"secure":true,"session":false})
   }
   if (cookies.length == 3){
