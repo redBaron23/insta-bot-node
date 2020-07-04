@@ -238,6 +238,8 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
 
 
 
+
+exports.unfollowSession = unfollowSession;
 exports.unfollowGarcas = unfollowGarcas;
 exports.farmFamous = farmFamous;
 exports.followUserFollowers = followUserFollowers
