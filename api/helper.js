@@ -59,7 +59,7 @@ async function writeJson(jsonData,uri){
         return console.log(err);
       }
     let arrayStr = uri.split('/');
-    let fileName = arrayStr[arrayStr.length-1]
+    let fileName = arrayStr[arrayStr.length-2]+' : '+arrayStr[arrayStr.length-1]
     console.log(fileName+" has been saved. ");
   });
 }
