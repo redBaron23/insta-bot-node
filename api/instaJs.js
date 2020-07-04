@@ -105,8 +105,8 @@ async function unfollowGarcas(USERNAME,PASSWORD){
 
 async function followAll(account,userName){
 
-    const MIN_TIME = 60000;
-    const MAX_TIME = 120000;
+    const MIN_TIME = 60000*2;
+    const MAX_TIME = 120000*2;
   
 
     //following/followers
