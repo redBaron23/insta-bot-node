@@ -6,7 +6,7 @@ var appDir = path.dirname(require.main.filename);
 
 
 
-const instaJs = require(appDir+'/api/instaJs.js')
+const instaJs = require(appDir+'/api/instaJsTest.js')
 
 var bodyParser = require('body-parser')
 var app = express()
