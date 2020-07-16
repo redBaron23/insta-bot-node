@@ -14,9 +14,12 @@ const FAMOUS_URI = appDir+'/api/data/accountFamous.json'
 
 const accountHelper = require(appDir+'/api/accountHelper')
 
+const _username = 'redbaron397'
+const _password = 'Sega1072_'
+//Helper account
+let _account = new accountHelper.Account(_username,_password);
+_account.init();
 
-
-	
 const bounces = 10000;
 
 
@@ -90,7 +93,6 @@ async function unfollowGarcas(USERNAME,PASSWORD){
     await account.follow('justinbieber')
     await account.follow('leomessi')
     const garcas = await account.getGarcas()
-    console.log(garcas)
     console.log(('Unfollowing: '+garcas.length+ ' garcas').green)
     unfollowAccounts(account,garcas)
 
@@ -105,15 +107,15 @@ async function unfollowGarcas(USERNAME,PASSWORD){
 
 async function followAll(account,userName){
 
-    const MIN_TIME = 60000*2;
-    const MAX_TIME = 120000*2;
-  
+  const MIN_TIME = 300000;//5min
+  const MAX_TIME = 1200000;//20min
+ 
 
     //following/followers
     const ratio = 0.2
 
     const rSize = 500 //Number of users per request (lower better to don't get a ban)
-    const totalFollowers = await account.countFollowers(userName);
+    const totalFollowers = await _account.countFollowers(userName);
     const times = Math.trunc(totalFollowers / rSize)+1
     //const totalFollowing = await account.countFollowing(userName);
     console.log('Going to follow ~'+String(totalFollowers).red+' from '+userName.green+' in '+String(times).blue+' times')
@@ -123,8 +125,7 @@ async function followAll(account,userName){
       console.log(String(i+'/'+times).red)
       console.log('At time: '+ await helper.dateTime())
 
-      let followers = await account.getUserFollowers(userName,rSize)
-    
+      let followers = await _account.getUserFollowers(userName,rSize)
       
       
       //Just follow users
@@ -134,11 +135,11 @@ async function followAll(account,userName){
       await helper.sleepRandom(MIN_TIME,MAX_TIME)
     } 
 }
-async function isViable(account,userName,ratio){
+async function isViable(userName,ratio){
   
   const realRatio = (ratio) ? ratio : 0.23
-  const followers = await account.countFollowers(userName);
-  const following = await account.countFollowing(userName);
+  const followers = await _account.countFollowers(userName);
+  const following = await _account.countFollowing(userName);
   
   const currentRatio = following/followers
 
@@ -175,8 +176,8 @@ async function bounceAccounts(account,bounces,ACCOUNTS_FAMOUS){
 
 async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
   
-  const MIN_TIME = 90000; //5min
-  const MAX_TIME = 180000;//10min
+  const MIN_TIME = 300000; //5min
+  const MAX_TIME = 420005; //7min
   let timeout = 0;
   let i = 1
   console.log('Unfollowing: '+ ACCOUNTS_FAMOUS.length)
@@ -207,24 +208,22 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
   console.log('Following: '+ ACCOUNTS_FAMOUS.length)
    for (let userName of ACCOUNTS_FAMOUS){
 	   if(!userName){
-	   	console.log('Vacio en la posicion'+i)
+	      console.log('Vacio en la posicion'+i)
 	   }
     console.log('Following: ' + (i +'/'+ ACCOUNTS_FAMOUS.length +' '+userName).green)
     console.log('At time: '+ await helper.dateTime())
     try{ 
 
-      if ((!ratio) || (await isViable(account,userName,ratio))){
+      if ((!ratio) || (await isViable(userName,ratio))){
 	console.log(String('Going to follow '+userName).green)
 	await account.follow(userName)
       }
-	
     }
     catch(e){
       console.log('Account not followed')
     }
     finally{
-    //timeout
-    
+      //timeout
       await helper.sleepRandom(MIN_TIME,MAX_TIME)
       i++
     }
