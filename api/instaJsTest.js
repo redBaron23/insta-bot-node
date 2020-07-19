@@ -14,11 +14,6 @@ const FAMOUS_URI = appDir+'/api/data/accountFamous.json'
 
 const accountHelper = require(appDir+'/api/accountHelper')
 
-const _username = 'redbaron397'
-const _password = 'Sega1072_'
-//Helper account
-let _account = new accountHelper.Account(_username,_password);
-_account.init();
 
 const bounces = 10000;
 
@@ -34,12 +29,12 @@ async function farmFamous(USERNAME,PASSWORD){
     let account = new accountHelper.Account(USERNAME,PASSWORD);
     await account.init()
     //FamousFarm
-
+    console.log('Inicio bien')
     bounceAccounts(account,bounces,ACCOUNTS_FAMOUS)
     _status = 'Farm famous started'
   }
   catch(e){
-    console.log(e)
+    //console.log(e)
     _statuis = 'Hubo un error'
   }
   return _status
@@ -112,12 +107,11 @@ async function followAll(account,userName){
  
 
     //following/followers
-    const ratio = 0.8
+    const ratio = 0.2
 
     const rSize = 500 //Number of users per request (lower better to don't get a ban)
-    const totalFollowers = await _account.countFollowers(userName);
+    const totalFollowers = await accountHelper.countFollowers(userName);
     const times = Math.trunc(totalFollowers / rSize)+1
-    //const totalFollowing = await account.countFollowing(userName);
     console.log('Going to follow ~'+String(totalFollowers).red+' from '+userName.green+' in '+String(times).blue+' times')
     
     for (i=0; i < times; i++){
@@ -125,7 +119,7 @@ async function followAll(account,userName){
       console.log(String(i+'/'+times).red)
       console.log('At time: '+ await helper.dateTime())
 
-      let followers = await _account.getUserFollowers(userName,rSize)
+      let followers = await account.getUserFollowers(userName,rSize)
       
       
       //Just follow users
@@ -136,16 +130,23 @@ async function followAll(account,userName){
     } 
 }
 async function isViable(userName,ratio){
-  
+  let response
   const realRatio = (ratio) ? ratio : 0.23
-  const followers = await _account.countFollowers(userName);
-  const following = await _account.countFollowing(userName);
-  
-  const currentRatio = following/followers
+  try{
 
-  const _status = (currentRatio >= realRatio)
-  
-  return _status
+    const following = await accountHelper.countFollowing(userName);
+    const followers = await accountHelper.countFollowers(userName);
+    const currentRatio = following/followers
+    response = (currentRatio >= realRatio)
+  }
+  catch(e){
+    console.log(e)
+    console.log('Error found -> viable')
+    response = true
+  }
+  finally{
+    return response
+  }
 
 }
 async function bounceAccounts(account,bounces,ACCOUNTS_FAMOUS){
@@ -189,7 +190,7 @@ async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
       await account.unfollow(userName)
     }
     catch(e){
-      console.log('Account not followed')
+      console.log('Account not unfollowed')
     }
     finally{
     //timeout
@@ -200,8 +201,11 @@ async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
 }
 async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
   
-  const MIN_TIME = 300000/2; //5min
-  const MAX_TIME = 420005/2; //7min
+  const MIN_TIME = 300000/3; //5min
+  const MAX_TIME = 420005/3; //7min
+  const QUERYs = 20
+  const QUERY_MIN_TIME = (5*60*1000)
+  const QUERY_MAX_TIME = (15*60*1000)
   
   let timeout = 0;
   let i = 1
@@ -210,6 +214,10 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
 	   if(!userName){
 	      console.log('Vacio en la posicion'+i)
 	   }
+     if( !(i % QUERYs) && (i>=QUERYs)){
+       //Sleep after 20 querys
+      await helper.sleepRandom(QUERY_MIN_TIME,QUERY_MAX_TIME)
+      }
     console.log('Following: ' + (i +'/'+ ACCOUNTS_FAMOUS.length +' '+userName).green)
     console.log('At time: '+ await helper.dateTime())
     try{ 
@@ -220,6 +228,7 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
       }
     }
     catch(e){
+      console.log(e)
       console.log('Account not followed')
     }
     finally{
