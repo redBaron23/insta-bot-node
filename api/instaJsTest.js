@@ -15,6 +15,11 @@ const FAMOUS_URI = appDir+'/api/data/accountFamous.json'
 const accountHelper = require(appDir+'/api/accountHelper')
 
 
+const _username = 'redbaron397'
+const _password = 'Sega1072_'
+let _account = new accountHelper.Account(_username,_password)
+_account.init()
+
 const bounces = 10000;
 
 
@@ -34,7 +39,7 @@ async function farmFamous(USERNAME,PASSWORD){
     _status = 'Farm famous started'
   }
   catch(e){
-    //console.log(e)
+    console.log(e)
     _statuis = 'Hubo un error'
   }
   return _status
@@ -53,6 +58,7 @@ async function followUserFollowers(USERNAME,PASSWORD){
     _status = 'Follow user Followers started'
   }
   catch(e){
+    console.log(e)
     _status = 'Hubo un error'
     console.log('Too many request')
   }
@@ -110,7 +116,7 @@ async function followAll(account,userName){
     const ratio = 0.2
 
     const rSize = 500 //Number of users per request (lower better to don't get a ban)
-    const totalFollowers = await accountHelper.countFollowers(userName);
+    const totalFollowers = await _account.countFollowers(userName);
     const times = Math.trunc(totalFollowers / rSize)+1
     console.log('Going to follow ~'+String(totalFollowers).red+' from '+userName.green+' in '+String(times).blue+' times')
     
@@ -134,8 +140,8 @@ async function isViable(userName,ratio){
   const realRatio = (ratio) ? ratio : 0.23
   try{
 
-    const following = await accountHelper.countFollowing(userName);
-    const followers = await accountHelper.countFollowers(userName);
+    const following = await _account.countFollowing(userName);
+    const followers = await _account.countFollowers(userName);
     const currentRatio = following/followers
     response = (currentRatio >= realRatio)
   }

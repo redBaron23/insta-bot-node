@@ -32,85 +32,6 @@ const default_quantity = 10000
 
 const errTime = {"init":(1000*3600*2),400:(1000*3600*8),429:(1000*3600*12)}
 
-const countFollowing = async (userName) => {
-  
-  const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
-
- const options = {
-    url: URL, 
-    method: 'GET'
-  };  
-  try{
-    const response = await axios(options)
-    const data = response.data.graphql.user.edge_follow.count;
-    return data
-  }
-  catch(e) {
-    if(e.response.status == 429){
-      console.log(('Error 429 in countFollowing, TOO MANY REQUEST, waiting '+(errTime[429])/(3600*1000)+' hours and try it again').red)
-      await helper.sleep(errTime[429])
-      await this.init()
-      let res = await this.countFollowing(URL)
-      return res
-    }
-    else if (e.response.status == 400){
-      console.log(('Error 400 in countFollowing, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
-      await helper.sleep(errTime[400])
-      await this.init()
-      let res = await this.countFollowing(URL)
-      return res
-     }
-    else{
-      
-      console.log('Error desconocido')
-      console.log(e.response.data)
-      console.log(e.response.status)
-      throw('ERROR')
-    }
-  } 
-}
-
-
-const countFollowers = async (userName) => {
-  
- 
-  const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
-
-
- const options = {
-    url: URL, 
-    method: 'GET'
-  };  
-  try{
-    const response = await axios(options)
-    const data = response.data.graphql.user.edge_followed_by.count;
-    return data
-  }
-  catch(e) {
-    if(e.response.status == 429){
-      console.log(('Error 429 in countFollowers, TOO MANY REQUEST, waiting '+(errTime[429])/(3600*1000)+' hours and try it again').red)
-      await helper.sleep(errTime[429])
-      await this.init()
-      let res = await this.countFollowers(URL)
-      return res
-    }
-    else if (e.response.status == 400){
-      console.log(('Error 400 in countFollowers, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
-      await helper.sleep(errTime[400])
-      await this.init()
-      let res = await this.countFollowers(URL)
-      return res
-     }
-    else{
-      console.log('Error desconocido')
-      console.log(e.response.data)
-      console.log(e.response.status)
-      throw('ERROR')
-    }
-  } 
-}
-
-
 
 
 async function goToProfile(page,USERNAME){
@@ -204,7 +125,21 @@ class Account {
 
 
   }
+  async countFollowing(userName){
   
+    const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
+
+    const response = await this.getData(URL);
+    return response.data.graphql.user.edge_follow.count
+  }	
+
+
+  async countFollowers(userName){
+  
+    const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
+    const response = await this.getData(URL);
+    return response.data.graphql.user.edge_followed_by.count
+  }
   async init(){
     try{
 
@@ -247,7 +182,7 @@ class Account {
       }
     }
     catch(e){
-      console.log(e.response.status)
+      console.log(e)
       console.log(('Could not init the account, retrying in '+(errTime.init)/(1000*3600) +' hours').red)
       await helper.sleep(errTime.init)
       let res = await this.init()
@@ -257,8 +192,8 @@ class Account {
   }
   async update(){
 
-  this._totalFollowing = await countFollowing()
-  this._totalFollowers = await countFollowers()
+  this._totalFollowing = await this.countFollowing()
+  this._totalFollowers = await this.countFollowers()
  }
 
   get totalFollowing(){
@@ -601,6 +536,4 @@ async getAccountData(){
 
 }
 
-exports.countFollowing = countFollowing
-exports.countFollowers = countFollowers
 exports.Account = Account
