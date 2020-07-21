@@ -116,7 +116,7 @@ async function followAll(account,userName){
     const ratio = 0.2
 
     const rSize = 500 //Number of users per request (lower better to don't get a ban)
-    const totalFollowers = await _account.countFollowers(userName);
+    const [totalFollowers,totalFollowing] = await _account.countFollows(userName);
     const times = Math.trunc(totalFollowers / rSize)+1
     console.log('Going to follow ~'+String(totalFollowers).red+' from '+userName.green+' in '+String(times).blue+' times')
     
@@ -140,8 +140,7 @@ async function isViable(userName,ratio){
   const realRatio = (ratio) ? ratio : 0.23
   try{
 
-    const following = await _account.countFollowing(userName);
-    const followers = await _account.countFollowers(userName);
+    const [followers,following]= await _account.countFollows(userName);
     const currentRatio = following/followers
     response = (currentRatio >= realRatio)
   }
@@ -207,11 +206,11 @@ async function unfollowAccounts(account,ACCOUNTS_FAMOUS){
 }
 async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
   
-  const MIN_TIME = 300000/3; //5min
-  const MAX_TIME = 420005/3; //7min
+  const MIN_TIME = 300000*0.4; //5min
+  const MAX_TIME = 420005*0.4; //7min
   const QUERYs = 20
-  const QUERY_MIN_TIME = (5*60*1000)
-  const QUERY_MAX_TIME = (15*60*1000)
+  const QUERY_MIN_TIME = (10*60*1000)
+  const QUERY_MAX_TIME = (30*60*1000)
   
   let timeout = 0;
   let i = 1
@@ -222,6 +221,7 @@ async function followAccounts(account,ACCOUNTS_FAMOUS,ratio){
 	   }
      if( !(i % QUERYs) && (i>=QUERYs)){
        //Sleep after 20 querys
+       console.log(QUERYs+' querys pasadas, a dormir '.yellow)
       await helper.sleepRandom(QUERY_MIN_TIME,QUERY_MAX_TIME)
       }
     console.log('Following: ' + (i +'/'+ ACCOUNTS_FAMOUS.length +' '+userName).green)

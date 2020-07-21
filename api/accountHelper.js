@@ -125,21 +125,19 @@ class Account {
 
 
   }
-  async countFollowing(userName){
+
+  async countFollows(userName){
   
     const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
 
     const response = await this.getData(URL);
-    return response.data.graphql.user.edge_follow.count
+    console.log(response.data.graphql)
+    const following = response.data.graphql.user.edge_follow.count
+    const followers = response.data.graphql.user.edge_followed_by.count
+    return [followers,following]
   }	
 
 
-  async countFollowers(userName){
-  
-    const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
-    const response = await this.getData(URL);
-    return response.data.graphql.user.edge_followed_by.count
-  }
   async init(){
     try{
 
@@ -192,8 +190,7 @@ class Account {
   }
   async update(){
 
-  this._totalFollowing = await this.countFollowing()
-  this._totalFollowers = await this.countFollowers()
+    [this._totalFollowers,this._totalFollowing]= await this.countFollows()
  }
 
   get totalFollowing(){
