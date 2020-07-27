@@ -122,19 +122,28 @@ class Account {
   constructor(userName,passWord) {
     this._userName = userName;
     this._passWord = passWord;
-
+    this._uri = appDir+'/api/data/users/'+this._userName
 
   }
 
   async countFollows(userName){
   
+    let following = 100,
+      followers = 100;
     const URL = 'https://www.instagram.com/'+userName+'/?__a=1'
 
     const response = await this.getData(URL);
-    console.log(response.data.graphql)
-    const following = response.data.graphql.user.edge_follow.count
-    const followers = response.data.graphql.user.edge_followed_by.count
-    return [followers,following]
+    try{
+      following = response.data.graphql.user.edge_follow.count
+      followers = response.data.graphql.user.edge_followed_by.count
+    }
+    catch(e){
+      console.log(e)
+      console.log('Setting defaults')
+    }
+    finally{
+      return [followers,following]
+    }
   }	
 
 
@@ -152,7 +161,6 @@ class Account {
 	this._userId = await this.getUserId(this._userName)
 	
 	await this.update()
-	this._uri = appDir+'/api/data/users/'+this._userName
 	helper.createDirectory(this._uri)
 	//Saving cookies (no reason why)
 	helper.writeJson(cookies,this._uri+'/cookies.json')
@@ -196,9 +204,7 @@ class Account {
   get totalFollowing(){
   return this._totalFollowing
   }
-  get sessionFollowed(){
-    return helper.readJson(this._uri+'/sessionFollowed.json')
-  }
+
   get totalFollowers(){
     return this._totalFollowers
   }
@@ -223,7 +229,22 @@ class Account {
     console.log('Following: '+this._totalFollowing)
   }
 
+  async sessionFollowed(){
+    const path = this._uri+'/sessionFollowed.json'
+    console.log(path)
+    let res = false;
 
+    try{
+      res = await helper.readJson(path)
+    }
+    catch(e){
+      console.log(e)
+    }
+    finally{
+      console.log(res)
+      return res
+    }
+  }
 async follow(userName){
   const userId = await this.getUserId(userName)
    
@@ -251,25 +272,29 @@ async follow(userName){
   }
 }
 
+async removeUserSession(userName){
+  let oldFollowing = []
+  const sessionUri = this._uri+'/sessionFollowed.json'
+
+  if (fs.existsSync(sessionUri)){
+    oldFollowing = await helper.readJson(this._uri+'/sessionFollowed.json')
+  }
+    
+    //remove unfollowed
+  let newFollowing = oldFollowing.filter( i => i !== userName) 
+  helper.writeJson(newFollowing,this._uri+'/sessionFollowed.json')
+}
+
 async unfollow(userName){
   const userId = await this.getUserId(userName)
   
   
   const URL = 'https://www.instagram.com/web/friendships/'+userId+'/unfollow/';
 
+  this.removeUserSession(userName)
   const res = await this.postData(URL)
-  if (res.status == '200'){
-    let oldFollowing = []
-    const sessionUri = this._uri+'/sessionFollowed.json'
-
-    if (fs.existsSync(sessionUri)){
-      oldFollowing = await helper.readJson(this._uri+'/sessionFollowed.json')
-    }
-    
-    //remove unfollowed
-    let newFollowing = oldFollowing.filter( i => i !== userName) 
-    helper.writeJson(newFollowing,this._uri+'/sessionFollowed.json')
- return true
+  if ((res.status == '200') || (res.status == '404')){
+    return true
   }
   else{
     return false
@@ -328,6 +353,29 @@ async getUserFollowers(userName,i){
   const QUERY_HASH = 'c76146de99bb02f6415203be841dd25a'; //Followers
   return await this.getUsers(QUERY_HASH,userName,quantity)
  }
+
+
+async getUserGarcas(userName,WHITELIST){
+  
+  try{
+    const data_uri = this._uri+'/whiteList.json'
+    const whiteList = (fs.existsSync(data_uri) && !WHITELIST) ? await helper.readJson(data_uri) : WHITELIST
+
+    const followers = await this.getUserFollowers(userName)
+    const following = await this.getUserFollowing(userName)
+    //No include following in followers
+    const users = following.filter( i => !followers.includes(i));
+   
+    const garcas = (whiteList)? users.filter( i => !whiteList.includes(i)) : users
+    return garcas
+  }
+  catch(e){
+    console.log(e)
+  }
+
+
+}
+
 
   async getFollowing(i){
     const following = await this.getUserFollowing(this._userName,i)
@@ -395,6 +443,7 @@ async postData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
+      console.log(e.response.data)
       console.log(('Error 429, TOO MANY REQUEST, waiting '+(errTime[429]/(3600*1000))+' hours and try it again').red)
       await helper.sleep(errTime[429])
       await this.init()
@@ -402,6 +451,7 @@ async postData(URL){
       return res
     }
     else if (e.response.status == 400){
+      console.log(e.response.data)
       console.log(('Error 400, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
       await helper.sleep(errTime[400])
       await this.init()
@@ -444,6 +494,7 @@ async getData(URL){
   }
   catch(e) {
     if(e.response.status == 429){
+      console.log(e.response.data)
       console.log(('Error 429, TOO MANY REQUEST, waiting '+(errTime[429])/(3600*1000)+' hours and try it again').red)
       await helper.sleep(errTime[429])
       await this.init()
@@ -451,6 +502,7 @@ async getData(URL){
       return res
     }
     else if (e.response.status == 400){
+      console.log(e.response.data)
       console.log(('Error 400, BAD REQUEST, waiting '+(errTime[400]/(3600*1000))+' hours and try it again').red)
       await helper.sleep(errTime[400])
       await this.init()
@@ -465,22 +517,10 @@ async getData(URL){
 
 async getGarcas(WHITELIST){
   //A garca is who you follow but it didn't follow you back
-  
-  try{
-    const data_uri = this._uri+'/whiteList.json'
-    const whiteList = (fs.existsSync(data_uri) && !WHITELIST) ? await helper.readJson(data_uri) : WHITELIST
-    const {followers, following} = await this.getAccountData()
-    //No include following in followers
-    const users = following.filter( i => !followers.includes(i));
-   
-    const garcas = (whiteList)? users.filter( i => !whiteList.includes(i)) : users
-    return garcas
-  }
-  catch(e){
-    console.log(e)
-  }
+  return (this.getUserGarcas(this._userName,WHITELIST))
 
 }
+
 
 async getFans(){
   //A garca is who you follow but it didn't follow you back
