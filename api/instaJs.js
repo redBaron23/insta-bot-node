@@ -182,11 +182,11 @@ async function bounceAccounts(account,bounces,accounts){
 
 async function unfollowAccounts(account,accounts){
   
-  const MIN_TIME = 300000*0.5; //5min
-  const MAX_TIME = 420005*0.5; //7min
+  const MIN_TIME = 300000*0.6; //5min
+  const MAX_TIME = 420005*0.6; //7min
   const QUERYs = 20
-  const QUERY_MIN_TIME = (10*60*1000)
-  const QUERY_MAX_TIME = (30*60*1000)
+  const QUERY_MIN_TIME = (20*60*1000)
+  const QUERY_MAX_TIME = (35*60*1000)
   
   let timeout = 0;
   let i = 1
