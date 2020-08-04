@@ -30,7 +30,7 @@ const axios = require('axios')
 //Followers/Unfollowers per account
 const default_quantity = 10000 
 
-const errTime = {"init":(1000*3600*2),400:(1000*3600*1),429:(1000*3600*12)}
+const errTime = {"init":(1000*3600*2),400:(1000*3600*0.3),429:(1000*3600*12)}
 
 
 
