@@ -185,7 +185,7 @@ class Account {
       }
     } catch (e) {
       let res;
-      if (e.includes("password")) {
+      if (e.message.includes("password")) {
         res = e;
       } else {
         console.log(e);
