@@ -61,7 +61,6 @@ async function getCookies(page, USERNAME) {
       session: false
     });
   }
-  console.log(cookies.length);
   console.log(cookies);
   if (existCsrftoken && existSessionid) {
     console.log("Session created");
@@ -103,9 +102,9 @@ async function logIn(USERNAME, PASSWORD) {
     await btn.evaluate(btn => btn.click());
     //To get cookies
     await page.waitForSelector(INSTAGRAM_LOGO, { timeout: 5000 });
-    //const res = await getCookies(page, USERNAME);
+    const res = await getCookies(page, USERNAME);
     console.log("Logged Successful()");
-    return "c"; //res;
+    return res;
   } catch (e) {
     let reason;
     const ERROR_TEXT = "#slfErrorAlert";
