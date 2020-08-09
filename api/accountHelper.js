@@ -31,22 +31,10 @@ const errTime = {
 };
 
 async function goToProfile(page, USERNAME) {
-  const SEARCH_INPUT =
-    "#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.LWmhU._0aCwM > input";
-
-  const USER_ELEM =
-    "#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.LWmhU._0aCwM > div:nth-child(4) > div.drKGC > div > a";
-  //const PROFILE_BTN = '#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.ctQZg > div > div:nth-child(5) > a'
-
   try {
-    await page.waitForSelector(SEARCH_INPUT, { timeout: 5000 });
-    await page.focus(SEARCH_INPUT);
-    await page.keyboard.type(USERNAME, { delay: 50 });
-    await page.waitFor(2000);
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Enter");
-
+    await page.goto("https://www.instagram.com/" + USERNAME);
     console.log("In profile: " + USERNAME);
+    await page.waitFor(5000);
   } catch (e) {
     console.log("Could not get to main profile");
   }
@@ -56,8 +44,11 @@ async function getCookies(page, USERNAME) {
   await goToProfile(page, USERNAME);
   const browserCookies = await page.cookies();
   let cookies = browserCookies.filter(i => usefulCookies.includes(i.name));
+  let existCsrftoken = cookies.some(i => i.name === "csrftoken");
+  let existSessionid = cookies.some(i => i.name === "sessionid");
+  let existShbid = cookies.some(i => i.name === "shbid");
   //not important cookie
-  if (cookies[2] == undefined) {
+  if (existShbid) {
     cookies.push({
       name: "shbid",
       value: "13095",
@@ -70,10 +61,12 @@ async function getCookies(page, USERNAME) {
       session: false
     });
   }
-  if (cookies.length == 3) {
+  console.log(cookies.length);
+  console.log(cookies);
+  if (existCsrftoken && existSessionid) {
     console.log("Session created");
   } else {
-    throw "ERROR AT GRABBING COOKIES";
+    throw "NEED MORE COOKIES";
   }
   return cookies;
 }
@@ -90,14 +83,14 @@ async function logIn(USERNAME, PASSWORD) {
 
   await page.goto("https://www.instagram.com");
 
+  const INSTAGRAM_LOGO =
+    "#react-root > section > nav > div._8MQSO.Cx7Bp > div > div > div.oJZym > a > div > div > img";
   const USER_INPUT =
-    "#react-root > section > main > article > div.rgFsT > div:nth-child(1) > div > form > div:nth-child(2) > div > label > input";
-
+    "#loginForm > div > div:nth-child(1) > div > label > input";
   const PASS_INPUT =
-    "#react-root > section > main > article > div.rgFsT > div:nth-child(1) > div > form > div:nth-child(3) > div > label > input";
+    "#loginForm > div > div:nth-child(2) > div > label > input";
 
-  const LOGIN_BTN =
-    "#react-root > section > main > article > div.rgFsT > div:nth-child(1) > div > form > div:nth-child(4) > button > div";
+  const LOGIN_BTN = "#loginForm > div > div:nth-child(3) > button";
 
   await page.waitForSelector(USER_INPUT, { timeout: 5000 });
   await page.focus(USER_INPUT);
@@ -108,12 +101,25 @@ async function logIn(USERNAME, PASSWORD) {
   try {
     const btn = await page.waitForSelector(LOGIN_BTN, { timeout: 5000 });
     await btn.evaluate(btn => btn.click());
-    const res = await getCookies(page, USERNAME);
+    //To get cookies
+    await page.waitForSelector(INSTAGRAM_LOGO, { timeout: 5000 });
+    //const res = await getCookies(page, USERNAME);
     console.log("Logged Successful()");
-    return res;
+    return "c"; //res;
   } catch (e) {
-    console.log(e);
-    throw "logIn failed";
+    let reason;
+    const ERROR_TEXT = "#slfErrorAlert";
+    let errorText = await page.$(ERROR_TEXT);
+
+    const message = await page.evaluate(i => i.textContent, errorText);
+    if (message.includes("password")) {
+      console.log('Incorrect password for '+USERNAME)
+      reason = "Incorrect password";
+    } else {
+      reason = "unknown";
+      console.log(e);
+    }
+    throw reason;
   } finally {
     browser.close();
   }
@@ -178,16 +184,21 @@ class Account {
         return false;
       }
     } catch (e) {
-      console.log(e);
-      console.log(
-        (
-          "Could not init the account, retrying in " +
-          errTime.init / (1000 * 3600) +
-          " hours"
-        ).red
-      );
-      await helper.sleep(errTime.init);
-      let res = await this.init();
+      let res;
+      if (e.includes("password")) {
+        res = e;
+      } else {
+        console.log(e);
+        console.log(
+          (
+            "Could not init the account, retrying in " +
+            errTime.init / (1000 * 3600) +
+            " hours"
+          ).red
+        );
+        await helper.sleep(errTime.init);
+        res = await this.init();
+      }
       return res;
     }
   }

@@ -15,7 +15,7 @@ const FAMOUS_URI = appDir+'/api/data/accountFamous.json'
 const accountHelper = require(appDir+'/api/accountHelper')
 
 
-const _username = 'redbaron398'
+const _username = 'redbaron396'
 const _password = 'SEGa1122'
 let _account = new accountHelper.Account(_username,_password)
 _account.init()
