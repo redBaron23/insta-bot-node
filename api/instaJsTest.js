@@ -15,7 +15,7 @@ const FAMOUS_URI = appDir+'/api/data/accountFamous.json'
 const accountHelper = require(appDir+'/api/accountHelper')
 
 
-const _username = 'redbaron398'
+const _username = 'redbaron396'
 const _password = 'SEGa1122'
 let _account = new accountHelper.Account(_username,_password)
 _account.init()
@@ -54,7 +54,7 @@ async function followUserFollowers(USERNAME,PASSWORD){
     await account.init()  
     const userName = 'psicologia_memes'
     // ratio = following/followers
-    const ratio = 0.5
+    const ratio = 1.2
     followAll(account,userName,ratio)
     _status = 'Follow user Followers started'
   }
@@ -72,7 +72,7 @@ async function unfollowSession(USERNAME,PASSWORD){
     let account = new accountHelper.Account(USERNAME,PASSWORD)
     await account.init()
 
-
+    console.log('UNFOLLOW USERNAME'+ USERNAME)
     let garcas = await _account.getUserGarcas(USERNAME)
    
     const session = await account.sessionFollowed()
@@ -86,6 +86,7 @@ async function unfollowSession(USERNAME,PASSWORD){
   }
   catch(e){
     _response = 'Hubo un error'
+    console.log(e)
     console.log('Error at unfollow session')
   }
   return _response
@@ -182,11 +183,11 @@ async function bounceAccounts(account,bounces,accounts){
 
 async function unfollowAccounts(account,accounts){
   
-  const MIN_TIME = 300000*0.6; //5min
-  const MAX_TIME = 420005*0.6; //7min
+  const MIN_TIME = 300000*0.5; //5min
+  const MAX_TIME = 420005*0.5; //7min
   const QUERYs = 20
-  const QUERY_MIN_TIME = (20*60*1000)
-  const QUERY_MAX_TIME = (35*60*1000)
+  const QUERY_MIN_TIME = (10*60*1000)
+  const QUERY_MAX_TIME = (30*60*1000)
   
   let timeout = 0;
   let i = 1
@@ -235,8 +236,8 @@ async function unfollowAccounts(account,accounts){
 }
 async function followAccounts(account,accounts,ratio){
   
-  const MIN_TIME = 300000*0.4; //5min
-  const MAX_TIME = 420005*0.4; //7min
+  const MIN_TIME = 300000*0.35; //5min
+  const MAX_TIME = 420005*0.35; //7min
   const QUERYs = 20
   const QUERY_MIN_TIME = (10*60*1000)
   const QUERY_MAX_TIME = (30*60*1000)
