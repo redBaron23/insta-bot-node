@@ -1,14 +1,17 @@
-var express = require("express");
+let express = require("express");
 
-var path = require("path");
+let path = require("path");
 
-var appDir = path.dirname(require.main.filename);
+let cors = require("cors");
+let appDir = path.dirname(require.main.filename);
 
 const instaJs = require(appDir + "/api/instaJs.js");
 
-var bodyParser = require("body-parser");
-var app = express();
+let bodyParser = require("body-parser");
+let app = express();
 
+//Anti cors
+app.use(cors())
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
