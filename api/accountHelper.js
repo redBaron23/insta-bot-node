@@ -149,7 +149,18 @@ class Account {
       return [followers, following];
     }
   }
+  load(data) {
+    if (data) {
+      const cookies = data.cookies;
 
+      this._userName = data.userName;
+      this._userId = data.userId;
+
+      this._csrftoken = cookies.csrftoken;
+      this._shbid = cookies.shbid;
+      this._sessionid = cookies.sessionid;
+    }
+  }
   async init() {
     try {
       console.log("Starting account: " + this._userName);
