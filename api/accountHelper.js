@@ -106,19 +106,21 @@ async function logIn(USERNAME, PASSWORD) {
     console.log("Logged Successful()");
     return res;
   } catch (e) {
-    let reason;
+    let errCode;
     const ERROR_TEXT = "#slfErrorAlert";
     let errorText = await page.$(ERROR_TEXT);
 
     const message = await page.evaluate(i => i.textContent, errorText);
     if (message.includes("password")) {
-      console.log('Incorrect password for '+USERNAME)
-      reason = "Incorrect password";
+      console.log("Incorrect password for " + USERNAME);
+      // 401 == incorrect password
+      errCode = 401;
     } else {
-      reason = "unknown";
+      // -1 unknown error
+      errCode = -1;
       console.log(e);
     }
-    throw reason;
+    throw errCode;
   } finally {
     browser.close();
   }
@@ -147,7 +149,18 @@ class Account {
       return [followers, following];
     }
   }
+  load(data) {
+    if (data) {
+      const cookies = data.cookies;
 
+      this._userName = data.userName;
+      this._userId = data.userId;
+
+      this._csrftoken = cookies.csrftoken;
+      this._shbid = cookies.shbid;
+      this._sessionid = cookies.sessionid;
+    }
+  }
   async init() {
     try {
       console.log("Starting account: " + this._userName);
@@ -184,22 +197,16 @@ class Account {
       }
     } catch (e) {
       let res;
-      if (e.message.includes("password")) {
-        res = e;
+      console.log("Aca", e);
+      if (e === 401) {
+        console.log(" Wrong password for", this._userName);
       } else {
-        console.log(e);
-        console.log(
-          (
-            "Could not init the account, retrying in " +
-            errTime.init / (1000 * 3600) +
-            " hours"
-          ).red
-        );
-        await helper.sleep(errTime.init);
-        res = await this.init();
+        console.log("Unknown error", this._userName);
       }
-      return res;
+
+      throw e;
     }
+    return res;
   }
   async update() {
     [this._totalFollowers, this._totalFollowing] = await this.countFollows();
