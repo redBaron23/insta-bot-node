@@ -17,7 +17,7 @@ const accountHelper = require(appDir + "/api/accountHelper");
 const _username = "redbaron396";
 const _password = "SEGa1122";
 let _account = new accountHelper.Account(_username, _password);
-//_account.init();
+_account.init();
 
 const bounces = 10000;
 
