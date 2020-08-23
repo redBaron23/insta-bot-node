@@ -493,8 +493,7 @@ class Account {
       Accept: "*/*",
       Cookie:
         "sessionid=" + this._sessionid.value + "; shbid=" + this._shbid.value,
-      "User-Agent":
-        "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
+      "User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",
       "Accept-Encoding": "gzip, deflate",
       "X-CSRFToken": this._csrftoken.value,
