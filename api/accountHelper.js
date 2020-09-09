@@ -61,7 +61,6 @@ async function getCookies(page, USERNAME) {
       session: false
     });
   }
-  console.log(cookies);
   if (existCsrftoken && existSessionid) {
     console.log("Session created");
   } else {
@@ -164,6 +163,7 @@ class Account {
   async init() {
     try {
       console.log("Starting account: " + this._userName);
+      console.log('Yendo al logIN');
       const cookies = await logIn(this._userName, this._passWord);
 
       if (cookies) {
@@ -171,8 +171,10 @@ class Account {
         this._shbid = cookies.find(i => i.name == "shbid");
         this._sessionid = cookies.find(i => i.name == "sessionid");
 
+      console.log('Yendo al getUserId');
         this._userId = await this.getUserId(this._userName);
 
+      console.log('Yendo al update');
         await this.update();
         helper.createDirectory(this._uri);
         //Saving cookies (no reason why)
@@ -433,7 +435,7 @@ class Account {
     const HEADERS = {
       Accept: "*/*",
       Cookie:
-        "sessionid=" + this._sessionid.value + "; shbid=" + this._shbid.value,
+        "sessionid=" + this._sessionid.value,
       "User-Agent":
         "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",
@@ -492,7 +494,7 @@ class Account {
     const HEADERS = {
       Accept: "*/*",
       Cookie:
-        "sessionid=" + this._sessionid.value + "; shbid=" + this._shbid.value,
+        "sessionid=" + this._sessionid.value,
       "User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",
       "Accept-Encoding": "gzip, deflate",
