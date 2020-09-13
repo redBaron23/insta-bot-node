@@ -44,16 +44,41 @@ app.route("/follow").post((req, res) => {
     res.send(result);
   }
 });
+app.route("/isRunning").post((req, res) => {
+  let result;
+  let json = {};
+
+  try {
+    const userName = req.body.userName;
+    let acc = _allAccounts.find(i => i.account.userName === userName).account;
+    if (acc.isRunning) {
+      json.isRunning = acc.isRunning;
+      json.action = acc.action;
+    } else {
+      json.isRunning = 0;
+    }
+  } catch (e) {
+    console.log(e);
+    json = {
+      data: "error",
+      status: -1
+    };
+  } finally {
+    result = JSON.stringify(json);
+    console.log(result);
+    res.send(result);
+  }
+});
+
 app.route("/stopBot").post((req, res) => {
   let result;
   let json;
   try {
-    const acc = req.body.data.account;
-    const userName = acc.userName;
-    let bot = _allAccounts.find(i => i.userName === userName);
+    const userName = req.body.userName;
+    let bot = _allAccounts.find(i => i.account.userName === userName);
     if (bot) {
-      bot.status = 0;
-
+      const acc = bot.account;
+      acc.isRunning = 0;
       json = {
         data: "ok",
         status: 200
@@ -86,19 +111,15 @@ app.route("/unfollowUsers").post((req, res) => {
     const unfollowUser = req.body.userName;
     let account = new Account(data.userName, "No pass");
     account.load(data);
+    account.isRunning = 1;
+    account.action = "unfollowUsers";
     let newBotUnfollow = {
-      userName: data.userName,
       account: account,
-      users: users,
-      action: "unfollowUsers",
-      status: 1
+      users: users
     };
     const index = _allAccounts.push(newBotUnfollow) - 1;
-    console.log("users",_allAccounts[index].users)
-    account.unfollowUsers(
-      _allAccounts[index].users,
-      _allAccounts[index].status
-    );
+    console.log("users", _allAccounts[index].users);
+    account.unfollowUsers(_allAccounts[index].users);
     json = {
       data: { index: index },
       status: 200

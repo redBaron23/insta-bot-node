@@ -1,4 +1,4 @@
-//send cookies as param
+//send cookies this.as param
 //send tokens
 //
 const puppeteer = require("puppeteer");
@@ -128,6 +128,8 @@ class Account {
   constructor(userName, passWord) {
     this._userName = userName;
     this._passWord = passWord;
+    this._isRunning = 0;
+    this._action = "";
     this._uri = appDir + "/api/data/users/" + this._userName;
   }
 
@@ -211,6 +213,22 @@ class Account {
   }
   async update() {
     [this._totalFollowers, this._totalFollowing] = await this.countFollows();
+  }
+
+  
+  set action(value){
+    this._action = value;
+  }
+
+  set isRunning(value){
+    this._isRunning = value;
+  }
+  get isRunning(){
+    return this._isRunning;
+  }
+
+  get action(){
+    return this._action;
   }
 
   get totalFollowing() {
@@ -316,7 +334,7 @@ class Account {
     }
   }
 
-  async unfollowUsers(users, isRunning) {
+  async unfollowUsers(users) {
     const MIN_TIME = 300000 * 0.6; //5min
     const MAX_TIME = 420005 * 0.6; //7min
     const QUERYs = 20;
@@ -328,7 +346,7 @@ class Account {
     let pos = 0;
     console.log(this._userName + " Is going to unfollow: " + users.length);
     for (let userName of users) {
-      if (isRunning) {
+      if (this._isRunning) {
         if (!(i % QUERYs) && i >= QUERYs) {
           //Sleep after 20 querys
           console.log(QUERYs + " querys pasadas, a dormir ".yellow);
