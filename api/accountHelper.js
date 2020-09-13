@@ -1,4 +1,3 @@
-//TODO
 //send cookies as param
 //send tokens
 //
@@ -163,7 +162,7 @@ class Account {
   async init() {
     try {
       console.log("Starting account: " + this._userName);
-      console.log('Yendo al logIN');
+      console.log("Yendo al logIN");
       const cookies = await logIn(this._userName, this._passWord);
 
       if (cookies) {
@@ -171,10 +170,10 @@ class Account {
         this._shbid = cookies.find(i => i.name == "shbid");
         this._sessionid = cookies.find(i => i.name == "sessionid");
 
-      console.log('Yendo al getUserId');
+        console.log("Yendo al getUserId");
         this._userId = await this.getUserId(this._userName);
 
-      console.log('Yendo al update');
+        console.log("Yendo al update");
         await this.update();
         helper.createDirectory(this._uri);
         //Saving cookies (no reason why)
@@ -317,6 +316,60 @@ class Account {
     }
   }
 
+  async unfollowUsers(users, isRunning) {
+    const MIN_TIME = 300000 * 0.6; //5min
+    const MAX_TIME = 420005 * 0.6; //7min
+    const QUERYs = 20;
+    const QUERY_MIN_TIME = 20 * 60 * 1000;
+    const QUERY_MAX_TIME = 35 * 60 * 1000;
+
+    let timeout = 0;
+    let i = 1;
+    let pos = 0;
+    console.log(this._userName + " Is going to unfollow: " + users.length);
+    for (let userName of users) {
+      if (isRunning) {
+        if (!(i % QUERYs) && i >= QUERYs) {
+          //Sleep after 20 querys
+          console.log(QUERYs + " querys pasadas, a dormir ".yellow);
+          await helper.sleepRandom(QUERY_MIN_TIME, QUERY_MAX_TIME);
+        }
+        console.log(
+          this._userName +
+            "is going to unfollow " +
+            (i + "/" + users.length + " " + userName).green
+        );
+        console.log("At time: " + (await helper.dateTime()));
+        try {
+          await this.unfollow(userName);
+        } catch (e) {
+          if (e.response) {
+            if (e.response.status == 404) {
+              console.log("Account does not exist or change the userName");
+            } else {
+              console.log(e);
+              console.log(
+                this.userName + " Account not unfollowed: " + userName
+              );
+            }
+          } else {
+            console.log(e);
+            console.log(this.userName + " Account not unfollowed: " + userName);
+          }
+        } finally {
+          //timeout
+          await helper.sleepRandom(MIN_TIME, MAX_TIME);
+          i++;
+          pos++;
+        }
+      } else {
+        //stop running
+        users = users.slice(pos, users.length);
+        break;
+      }
+    }
+  }
+
   async getUsers(QUERY_HASH, userName, quantity) {
     let nextCursor = "";
     const uri_history = this._uri + "/usersHistory.json";
@@ -434,8 +487,7 @@ class Account {
   async postData(URL) {
     const HEADERS = {
       Accept: "*/*",
-      Cookie:
-        "sessionid=" + this._sessionid.value,
+      Cookie: "sessionid=" + this._sessionid.value,
       "User-Agent":
         "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",
@@ -493,9 +545,9 @@ class Account {
   async getData(URL) {
     const HEADERS = {
       Accept: "*/*",
-      Cookie:
-        "sessionid=" + this._sessionid.value,
-      "User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
+      Cookie: "sessionid=" + this._sessionid.value,
+      "User-Agent":
+        "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",
       "Accept-Encoding": "gzip, deflate",
       "X-CSRFToken": this._csrftoken.value,

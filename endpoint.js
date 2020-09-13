@@ -8,6 +8,8 @@ let appDir = path.dirname(require.main.filename);
 const instaJs = require(appDir + "/api/instaJs.js");
 const Account = require("./api/accountHelper").Account;
 let bodyParser = require("body-parser");
+
+let _allAccounts = [];
 let app = express();
 
 //Anti cors
@@ -42,6 +44,78 @@ app.route("/follow").post((req, res) => {
     res.send(result);
   }
 });
+app.route("/stopBot").post((req, res) => {
+  let result;
+  let json;
+  try {
+    const acc = req.body.data.account;
+    const userName = acc.userName;
+    let bot = _allAccounts.find(i => i.userName === userName);
+    if (bot) {
+      bot.status = 0;
+
+      json = {
+        data: "ok",
+        status: 200
+      };
+    } else {
+      json = {
+        data: "No existe",
+        status: 404
+      };
+    }
+  } catch (e) {
+    console.log(e);
+    json = {
+      data: "error",
+      status: -1
+    };
+  } finally {
+    result = JSON.stringify(json);
+    console.log(result);
+    res.send(result);
+  }
+});
+
+app.route("/unfollowUsers").post((req, res) => {
+  let result;
+  let json;
+  try {
+    const data = req.body.account;
+    const users = req.body.users;
+    const unfollowUser = req.body.userName;
+    let account = new Account(data.userName, "No pass");
+    account.load(data);
+    let newBotUnfollow = {
+      userName: data.userName,
+      account: account,
+      users: users,
+      action: "unfollowUsers",
+      status: 1
+    };
+    const index = _allAccounts.push(newBotUnfollow) - 1;
+    console.log("users",_allAccounts[index].users)
+    account.unfollowUsers(
+      _allAccounts[index].users,
+      _allAccounts[index].status
+    );
+    json = {
+      data: { index: index },
+      status: 200
+    };
+  } catch (e) {
+    console.log(e);
+    json = {
+      data: "error",
+      status: -1
+    };
+  } finally {
+    result = JSON.stringify(json);
+    console.log(result);
+    res.send(result);
+  }
+});
+
 app.route("/unfollow").post((req, res) => {
   let result;
   let json;
