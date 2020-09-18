@@ -1,5 +1,4 @@
-//TODO
-//send cookies as param
+//send cookies this.as param
 //send tokens
 //
 const puppeteer = require("puppeteer");
@@ -13,7 +12,7 @@ const appDir = path.dirname(require.main.filename);
 
 const helper = require(appDir + "/api/helper");
 
-const HEADLESS = true;
+const HEADLESS = false;
 
 const BROWSER = "chromium";
 
@@ -61,7 +60,6 @@ async function getCookies(page, USERNAME) {
       session: false
     });
   }
-  console.log(cookies);
   if (existCsrftoken && existSessionid) {
     console.log("Session created");
   } else {
@@ -130,6 +128,8 @@ class Account {
   constructor(userName, passWord) {
     this._userName = userName;
     this._passWord = passWord;
+    this._isRunning = 0;
+    this._action = "";
     this._uri = appDir + "/api/data/users/" + this._userName;
   }
 
@@ -149,10 +149,22 @@ class Account {
       return [followers, following];
     }
   }
+  load(data) {
+    if (data) {
+      const cookies = data.cookies;
 
+      this._userName = data.userName;
+      this._userId = data.userId;
+
+      this._csrftoken = cookies.csrftoken;
+      this._shbid = cookies.shbid;
+      this._sessionid = cookies.sessionid;
+    }
+  }
   async init() {
     try {
       console.log("Starting account: " + this._userName);
+      console.log("Yendo al logIN");
       const cookies = await logIn(this._userName, this._passWord);
 
       if (cookies) {
@@ -160,8 +172,10 @@ class Account {
         this._shbid = cookies.find(i => i.name == "shbid");
         this._sessionid = cookies.find(i => i.name == "sessionid");
 
+        console.log("Yendo al getUserId");
         this._userId = await this.getUserId(this._userName);
 
+        console.log("Yendo al update");
         await this.update();
         helper.createDirectory(this._uri);
         //Saving cookies (no reason why)
@@ -199,6 +213,22 @@ class Account {
   }
   async update() {
     [this._totalFollowers, this._totalFollowing] = await this.countFollows();
+  }
+
+  
+  set action(value){
+    this._action = value;
+  }
+
+  set isRunning(value){
+    this._isRunning = value;
+  }
+  get isRunning(){
+    return this._isRunning;
+  }
+
+  get action(){
+    return this._action;
   }
 
   get totalFollowing() {
@@ -301,6 +331,60 @@ class Account {
       return true;
     } else {
       return false;
+    }
+  }
+
+  async unfollowUsers(users) {
+    const MIN_TIME = 300000 * 0.6; //5min
+    const MAX_TIME = 420005 * 0.6; //7min
+    const QUERYs = 20;
+    const QUERY_MIN_TIME = 20 * 60 * 1000;
+    const QUERY_MAX_TIME = 35 * 60 * 1000;
+
+    let timeout = 0;
+    let i = 1;
+    let pos = 0;
+    console.log(this._userName + " Is going to unfollow: " + users.length);
+    for (let userName of users) {
+      if (this._isRunning) {
+        if (!(i % QUERYs) && i >= QUERYs) {
+          //Sleep after 20 querys
+          console.log(QUERYs + " querys pasadas, a dormir ".yellow);
+          await helper.sleepRandom(QUERY_MIN_TIME, QUERY_MAX_TIME);
+        }
+        console.log(
+          this._userName +
+            "is going to unfollow " +
+            (i + "/" + users.length + " " + userName).green
+        );
+        console.log("At time: " + (await helper.dateTime()));
+        try {
+          await this.unfollow(userName);
+        } catch (e) {
+          if (e.response) {
+            if (e.response.status == 404) {
+              console.log("Account does not exist or change the userName");
+            } else {
+              console.log(e);
+              console.log(
+                this.userName + " Account not unfollowed: " + userName
+              );
+            }
+          } else {
+            console.log(e);
+            console.log(this.userName + " Account not unfollowed: " + userName);
+          }
+        } finally {
+          //timeout
+          await helper.sleepRandom(MIN_TIME, MAX_TIME);
+          i++;
+          pos++;
+        }
+      } else {
+        //stop running
+        users = users.slice(pos, users.length);
+        break;
+      }
     }
   }
 
@@ -421,8 +505,7 @@ class Account {
   async postData(URL) {
     const HEADERS = {
       Accept: "*/*",
-      Cookie:
-        "sessionid=" + this._sessionid.value + "; shbid=" + this._shbid.value,
+      Cookie: "sessionid=" + this._sessionid.value,
       "User-Agent":
         "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",
@@ -480,8 +563,7 @@ class Account {
   async getData(URL) {
     const HEADERS = {
       Accept: "*/*",
-      Cookie:
-        "sessionid=" + this._sessionid.value + "; shbid=" + this._shbid.value,
+      Cookie: "sessionid=" + this._sessionid.value,
       "User-Agent":
         "Mozilla/5.0 (X11; Linux x86_64; rv:77.0) Gecko/20100101 Firefox/77.0",
       "Accept-Language": "en-US,en;q=0.5",

@@ -1,4 +1,3 @@
-//TODO
 //
 //Farm famous option in data/user/config (ON/OFF)
 const path = require("path");
@@ -84,7 +83,7 @@ async function followUserFollowers(USERNAME, PASSWORD) {
     let response = {};
     let account = new accountHelper.Account(USERNAME, PASSWORD);
     await account.init();
-    const userName = "psicologia_memes";
+    const userName = "laplata.ciudad";
     // ratio = following/followers
     const ratio = 0.5;
     followAll(account, userName, ratio);
