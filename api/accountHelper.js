@@ -14,7 +14,7 @@ const helper = require(appDir + "/api/helper");
 
 const HEADLESS = false;
 
-const BROWSER = "chromium";
+const BROWSER = "chromium-browser";
 
 const querystring = require("querystring");
 
